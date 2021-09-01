@@ -1,6 +1,4 @@
-from typing import Optional
-
-from pydantic import BaseSettings, Field
+from pydantic import BaseSettings
 
 
 class ResourceConfig(BaseSettings):
@@ -8,8 +6,6 @@ class ResourceConfig(BaseSettings):
     All constants and settings will be here.
     For more info: https://pydantic-docs.helpmanual.io/usage/settings/
     """
-
-    ENV_STATE: Optional[str] = Field(None, env="ENV_STATE")
 
     mongo_host: str = None
     mongo_root_username: str = None
