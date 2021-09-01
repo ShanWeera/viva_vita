@@ -18,7 +18,7 @@ RUN yum localinstall -y *.rpm && rm *.rpm
 # Install Poetry
 ENV POETRY_HOME=/poetry
 ENV PATH=$POETRY_HOME/bin:$PATH
-RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/install-poetry.py | python3.8 -
+RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/install-poetry.py | python3.8 - -p
 
 # Download & Extract IEDB MHC II Tools
 RUN wget -nd -nv --show-progress --progress=bar:force https://downloads.iedb.org/tools/mhcii/3.1.5/IEDB_MHC_II-3.1.5.tar.gz
@@ -198,7 +198,7 @@ RUN rm -rf method/
 ENV PYTHONPATH=/mhc_i/src:/mhc_ii
 
 # Run MHCI tests
-RUN python3.8 src/predict_binding.py consensus HLA-A*02:01 9 ./examples/input_sequence.fasta
+#RUN python3.8 src/predict_binding.py consensus HLA-A*02:01 9 ./examples/input_sequence.fasta
 RUN python3.8 src/predict_binding.py netmhcpan_el HLA-A*02:01 9 ./examples/input_sequence.fasta
 RUN python3.8 src/predict_binding.py ann HLA-A*02:01 9 ./examples/input_sequence.fasta
 RUN python3.8 src/predict_binding.py IEDB_recommended HLA-A*02:01 9 ./examples/input_sequence.fasta
@@ -219,4 +219,5 @@ COPY poetry.toml pyproject.toml /viva_vdm/
 COPY viva_vdm /viva_vdm/viva_vdm/
 
 # Install project dependancies
+WORKDIR /viva_vdm
 RUN poetry env use 3.8 && poetry install
