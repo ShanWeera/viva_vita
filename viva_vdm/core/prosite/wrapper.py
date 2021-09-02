@@ -15,7 +15,7 @@ from Bio.ExPASy.Prosite import Record
 
 from .exceptions import PrositeError
 from .models import PrositeResult
-from ...settings import AppConfig
+from ..settings import AppConfig
 
 
 class PrositeScan(object):
