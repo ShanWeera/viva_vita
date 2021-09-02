@@ -14,7 +14,7 @@ import dotenv
 from pymongo import MongoClient
 from pymongo.errors import ServerSelectionTimeoutError, OperationFailure, CollectionInvalid
 
-from viva_vdm.settings import ResourceConfig
+from viva_vdm.core.settings import ResourceConfig
 
 
 class Setup(object):
