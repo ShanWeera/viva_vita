@@ -3,15 +3,15 @@ from .settings import ResourceConfig
 
 settings = ResourceConfig()
 
-tasks = ['viva_ddm.core.tasks']
+tasks = ['viva_vdm.core.tasks']
 
 app = Celery(
-    'viva_ddm.celery_app',
+    'viva_vdm.core.celery_app',
     include=tasks,
     broker=F'amqp://{settings.rabbitmq_username}:{settings.rabbitmq_password}@{settings.rabbitmq_host}:5672',
 )
 
-app.autodiscover_tasks(['viva_ddm.core.tasks'])
+app.autodiscover_tasks(['viva_vdm.core.tasks'])
 
 
 def main():
