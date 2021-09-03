@@ -103,8 +103,16 @@ class PrositeDBModel(EmbeddedDocument):
     end = IntField(required=True)
 
 
+class BlastDBModel(EmbeddedDocument):
+    accession = StringField(required=True, max_length=12)
+    description = StringField(required=True)
+    start = IntField(required=True)
+    end = IntField(required=True)
+
+
 class HCSResultsDBModel(EmbeddedDocument):
     prosite = EmbeddedDocumentListField(PrositeDBModel, required=False)
+    blast = EmbeddedDocumentListField(BlastDBModel, required=False)
 
 
 class HCSDBModel(Document):

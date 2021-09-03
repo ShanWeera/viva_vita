@@ -11,15 +11,15 @@ class ResourceConfig(BaseSettings):
     mongo_root_username: str = None
     mongo_root_password: str = None
 
-    mongo_ddm_username: str
-    mongo_ddm_password: str
+    mongo_ddm_username: str = None
+    mongo_ddm_password: str = None
 
     mongo_ddm_database: str = 'vdm'
     mongo_celery_database: str = 'celery'
 
     rabbitmq_host: str = 'localhost'
     rabbitmq_username: str = 'rabbitmq'
-    rabbitmq_password: str
+    rabbitmq_password: str = None
 
     class Config:
         env_file: str = '.env'
@@ -42,6 +42,8 @@ class AppConfig(BaseSettings):
     prosite_exe_path: str = None
     prosite_db_path: str = None
 
+    blast_exe_path: str = None
+
     class Config:
         env_file: str = '.env'
         env_file_encoding = 'utf-8'
@@ -51,4 +53,5 @@ class AppConfig(BaseSettings):
         fields = {
             'prosite_exe_path': {'env': ['PROSITE_INSTALL_PATH']},
             'prosite_db_path': {'env': ['PROSITE_DB_PATH']},
+            'blast_exe_path': {'env': ['BLAST_INSTALL_PATH']},
         }
