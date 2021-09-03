@@ -1,18 +1,18 @@
 from subprocess import run, PIPE
 from typing import List
 
-from .constants import BlastConstants
-from .exceptions import BlastException
+from .constants import Databases, OutputFormats, Matrices
+from .exceptions import BlastException, NotImplementedException
 from ..settings import AppConfig
 
 
 class BlastCliWrapper(object):
     def __init__(
         self,
-        database: str = BlastConstants.Databases.NON_REDUNDANT,
-        matrix: str = BlastConstants.Matrices.PAM30,
+        database: Databases = Databases.NON_REDUNDANT,
+        matrix: Matrices = Matrices.PAM30,
         evalue: float = 0.05,
-        outfmt: int = BlastConstants.OutputFormats.JSON,
+        outfmt: OutputFormats = OutputFormats.JSON,
         remote: bool = True,
         tax_ids_exclude: list = None,
         tax_ids_include: list = None,
@@ -31,10 +31,10 @@ class BlastCliWrapper(object):
         :param tax_ids_include: List of taxonomy ids to include in the search.
         :param max_target_seqs: Number of aligned sequences to keep.
 
-        :type database: str
-        :type matrix: str
-        :type evalue: int
-        :type outfmt: int
+        :type database: Databases
+        :type matrix: Matrices
+        :type evalue: float
+        :type outfmt: OutputFormats
         :type remote: bool
         :type tax_ids_exclude: list
         :type tax_ids_include: list
@@ -72,6 +72,9 @@ class BlastCliWrapper(object):
         if process.returncode != 0:
             raise BlastException(sequence, arguments, process.stderr)
 
+        if self.outfmt != OutputFormats.JSON:
+            raise NotImplementedException(self.outfmt.name)
+
         return process.stdout
 
     def _get_blast_args(self) -> list:
@@ -86,13 +89,13 @@ class BlastCliWrapper(object):
         args = [
             settings.blast_exe_path,
             '-db',
-            self.database,
+            self.database.value,
             '-matrix',
-            self.matrix,
+            self.matrix.value,
             '-evalue',
             str(self.evalue),
             '-outfmt',
-            str(self.outfmt),
+            str(self.outfmt.value),
             '-remote' if self.remote else None,
             '-max_target_seqs',
             str(self.max_target_seqs),
