@@ -67,11 +67,8 @@ class LoggerQuerySet(QuerySet):
         entry = LogEntryDBModel(flag=flag, message=msg)
         hcs = self.get()
 
-        if hcs.logs is None:
-            hcs.logs = LogsDBModel().save()
-
-        if context == LoggerContexts.pdb:
-            hcs.logs.pdb.append(entry)
+        if context == LoggerContexts.blast:
+            hcs.logs.blast.append(entry)
         elif context == LoggerContexts.prosite:
             hcs.logs.prosite.append(entry)
 
@@ -113,9 +110,21 @@ class BlastDBModel(EmbeddedDocument):
     title = StringField(required=True)
 
 
+class MHCIDBModel(EmbeddedDocument):
+    sequence = StringField(required=True)
+    percentile = IntField(required=True)
+
+
+class MHCIIDBModel(EmbeddedDocument):
+    sequence = StringField(required=True)
+    percentile = IntField(required=True)
+
+
 class HCSResultsDBModel(EmbeddedDocument):
     prosite = EmbeddedDocumentListField(PrositeDBModel, required=False)
     blast = EmbeddedDocumentListField(BlastDBModel, required=False)
+    mhci = EmbeddedDocumentListField(MHCIDBModel, required=False)
+    mhcii = EmbeddedDocumentListField(MHCIIDBModel, required=False)
 
 
 class HCSDBModel(Document):
@@ -124,7 +133,7 @@ class HCSDBModel(Document):
     position = IntField(required=True)
     results = EmbeddedDocumentField(HCSResultsDBModel, required=True, default=HCSResultsDBModel())
     status = EmbeddedDocumentField(StepStatusesDBModel, required=True, default=StepStatusesDBModel())
-    logs = FollowReferenceField(LogsDBModel, required=False)
+    logs = FollowReferenceField(LogsDBModel, required=False, default=LogsDBModel().save())
 
     meta = {'queryset_class': LoggerQuerySet, 'collection': 'hcs'}
 
