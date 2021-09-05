@@ -1,9 +1,11 @@
+import json
 from subprocess import run, PIPE
 from typing import List
 
 from .constants import Databases, OutputFormats, Matrices
 from .exceptions import BlastException, NotImplementedException
 from ..settings import AppConfig
+from .models import BlastResults
 
 
 class BlastCliWrapper(object):
@@ -56,7 +58,7 @@ class BlastCliWrapper(object):
         self.max_target_seqs = max_target_seqs
         self.tax_ids_include = tax_ids_include
 
-    def run_blast(self, sequence: str) -> str:
+    def run_blast(self, sequence: str) -> BlastResults:
         """
         Run BLAST with the provided parameters as class initiation.
 
@@ -75,7 +77,7 @@ class BlastCliWrapper(object):
         if self.outfmt != OutputFormats.JSON:
             raise NotImplementedException(self.outfmt.name)
 
-        return process.stdout
+        return BlastResults(**json.loads(process.stdout))
 
     def _get_blast_args(self) -> list:
         """

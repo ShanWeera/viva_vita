@@ -1,4 +1,4 @@
-from .constants import BlastConstants
+from .constants import OutputFormats
 
 
 class BlastException(Exception):
@@ -9,5 +9,5 @@ class BlastException(Exception):
 
 
 class NotImplementedException(Exception):
-    def __init__(self, method: BlastConstants.OutputFormats):
+    def __init__(self, method: OutputFormats):
         super(NotImplementedException, self).__init__(f"This output method is not implemented: {method}")
