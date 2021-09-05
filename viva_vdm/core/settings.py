@@ -7,18 +7,18 @@ class ResourceConfig(BaseSettings):
     For more info: https://pydantic-docs.helpmanual.io/usage/settings/
     """
 
-    mongo_host: str = None
-    mongo_root_username: str = None
-    mongo_root_password: str = None
+    mongo_host: str
+    mongo_root_username: str
+    mongo_root_password: str
 
     mongo_ddm_username: str
     mongo_ddm_password: str
 
-    mongo_ddm_database: str = 'vdm'
-    mongo_celery_database: str = 'celery'
+    mongo_ddm_database: str
+    mongo_celery_database: str
 
-    rabbitmq_host: str = 'localhost'
-    rabbitmq_username: str = 'rabbitmq'
+    rabbitmq_host: str
+    rabbitmq_username: str
     rabbitmq_password: str
 
     class Config:
@@ -39,8 +39,10 @@ class ResourceConfig(BaseSettings):
 
 
 class AppConfig(BaseSettings):
-    prosite_exe_path: str = None
-    prosite_db_path: str = None
+    prosite_exe_path: str
+    prosite_db_path: str
+
+    blast_exe_path: str
 
     class Config:
         env_file: str = '.env'
@@ -51,4 +53,5 @@ class AppConfig(BaseSettings):
         fields = {
             'prosite_exe_path': {'env': ['PROSITE_INSTALL_PATH']},
             'prosite_db_path': {'env': ['PROSITE_DB_PATH']},
+            'blast_exe_path': {'env': ['BLAST_INSTALL_PATH']},
         }

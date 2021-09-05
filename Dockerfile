@@ -15,6 +15,9 @@ RUN wget -nv --show-progress --progress=bar:force https://ftp.ncbi.nlm.nih.gov/b
 # Install Blast
 RUN yum localinstall -y *.rpm && rm *.rpm
 
+# Add Blast to the envar (installing puts blastp to path)
+ENV BLAST_INSTALL_PATH=blastp
+
 # Install Poetry
 ENV POETRY_HOME=/poetry
 ENV PATH=$POETRY_HOME/bin:$PATH
