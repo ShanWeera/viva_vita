@@ -105,9 +105,10 @@ class PrositeDBModel(EmbeddedDocument):
 
 class BlastDBModel(EmbeddedDocument):
     accession = StringField(required=True, max_length=12)
-    description = StringField(required=True)
-    start = IntField(required=True)
-    end = IntField(required=True)
+    species = StringField(required=True)
+    strain = StringField(required=True)
+    taxid = IntField(required=True)
+    title = StringField(required=True)
 
 
 class HCSResultsDBModel(EmbeddedDocument):
