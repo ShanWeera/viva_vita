@@ -38,12 +38,14 @@ class LoggerMessages(Enum):
     PROSITE_STARTING = 'Prosite analysis is starting.'
     PROSITE_ERROR = 'Prosite analysis failed.'
     PROSITE_COMPLETED = 'Prosite analysis completed.'
+    BLAST_ERROR = 'Blast analysis failed.'
+    BLAST_COMPLETED = 'Blast analysis completed.'
 
 
 class LoggerContexts(Enum):
     general: str = 'general'
     prosite: str = 'prosite'
-    pdb: str = 'pdb'
+    blast: str = 'blast'
 
 
 class LoggerFlags(Enum):
@@ -86,14 +88,14 @@ class LogEntryDBModel(EmbeddedDocument):
 
 class LogsDBModel(Document):
     prosite = EmbeddedDocumentListField(LogEntryDBModel, required=False)
-    pdb = EmbeddedDocumentListField(LogEntryDBModel, required=False)
+    blast = EmbeddedDocumentListField(LogEntryDBModel, required=False)
 
     meta = {'collection': 'logs'}
 
 
 class StepStatusesDBModel(EmbeddedDocument):
     prosite = EnumField(HCSStatuses, default=HCSStatuses.pending)
-    pdb = EnumField(HCSStatuses, default=HCSStatuses.pending)
+    blast = EnumField(HCSStatuses, default=HCSStatuses.pending)
 
 
 class PrositeDBModel(EmbeddedDocument):
@@ -106,7 +108,7 @@ class PrositeDBModel(EmbeddedDocument):
 class BlastDBModel(EmbeddedDocument):
     accession = StringField(required=True, max_length=12)
     species = StringField(required=True)
-    strain = StringField(required=True)
+    strain = StringField(required=True, null=True)
     taxid = IntField(required=True)
     title = StringField(required=True)
 
