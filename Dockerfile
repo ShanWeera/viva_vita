@@ -218,9 +218,10 @@ RUN rm *.gz
 ENV BLASTDB=/blastdb
 
 # Copy project files
-COPY poetry.toml pyproject.toml /viva_vdm/
+COPY pyproject.toml /viva_vdm/
 COPY viva_vdm /viva_vdm/viva_vdm/
 
 # Install project dependancies
 WORKDIR /viva_vdm
-RUN poetry env use 3.8 && poetry install
+RUN poetry export -f requirements.txt --output requirements.txt
+RUN python3.8 -m pip install -r requirements.txt
