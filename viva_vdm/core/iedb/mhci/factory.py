@@ -14,12 +14,12 @@ class MhcIPredictionFactory(object):
         """
         This factory method should be use to get the appropriate prediction method.
 
-        :param supertypes: A list of pre-defined MHC I supertypes.
+        :param supertype: A pre-defined MHC I supertypes.
         :param method: One of the pre-defined MHC I prediction methods (default: NETMHCPAN).
         :param length: The length of the generated epitopes (default: 9).
         :param cutoff: The IEDB percentile cutoff (default: 1%).
 
-        :type supertypes: MhcISupertypes
+        :type supertype: MhcISupertypes
         :type method: PredictionMethods
         :type length: int
         :type cutoff: float
