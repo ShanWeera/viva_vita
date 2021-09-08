@@ -1,6 +1,6 @@
-from pydantic import BaseModel
+from ..common.models import PredictedEpitope
 
 
-class MHCIResult(BaseModel):
+class MHCIEpitope(PredictedEpitope):
     sequence: str
     percentile: float

@@ -1,5 +1,3 @@
-from typing import List
-
 from .constants import PredictionMethods, MhcISupertypes
 from .wrappers import MhcINetMhcPan
 
@@ -8,7 +6,7 @@ class MhcIPredictionFactory(object):
     def __new__(
         cls,
         *,
-        supertypes: List[MhcISupertypes],
+        supertype: MhcISupertypes,
         method: PredictionMethods = PredictionMethods.NETMHCPAN,
         length: int = 9,
         cutoff: float = 1.00,
@@ -21,7 +19,7 @@ class MhcIPredictionFactory(object):
         :param length: The length of the generated epitopes (default: 9).
         :param cutoff: The IEDB percentile cutoff (default: 1%).
 
-        :type supertypes: List[MhcISupertypes]
+        :type supertypes: MhcISupertypes
         :type method: PredictionMethods
         :type length: int
         :type cutoff: float
@@ -29,8 +27,8 @@ class MhcIPredictionFactory(object):
         Example:
             >>> from viva_vdm.core.iedb.mhci.constants import MhcISupertypes, PredictionMethods
             >>> from viva_vdm.core.iedb.mhci.factory import MhcIPredictionFactory
-            >>> prediction_supertypes = [MhcISupertypes.A1, MhcISupertypes.A2]
-            >>> predictor = MhcIPredictionFactory(supertypes=prediction_supertypes, method=PredictionMethods.NETMHCPAN)
+            >>> prediction_supertype = MhcISupertypes.A1
+            >>> predictor = MhcIPredictionFactory(supertypes=prediction_supertype, method=PredictionMethods.NETMHCPAN)
             >>> results = predictor.predict("MDSNTVSSFQDI")
         """
 
