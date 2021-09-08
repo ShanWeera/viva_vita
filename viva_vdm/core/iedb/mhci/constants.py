@@ -1,9 +1,9 @@
 from enum import Enum
 from pathlib import Path
 from os.path import join
-from typing import List
+from typing import List, Literal
 
-SUPERTYPES_DATA_DIR = join(Path(__file__).parent, "alleles")
+SUPERTYPES_DATA_DIR = join(Path(__file__).parent, "supertypes")
 
 SUPERTYPE_ALLELE_MAP = {
     'A1': join(SUPERTYPES_DATA_DIR, "supertype_a1.txt"),
@@ -21,31 +21,50 @@ SUPERTYPE_ALLELE_MAP = {
 }
 
 
+def get_alleles(
+    supertype: Literal["A1", "A2", "A3", "A24", "A26", "B7", "B8", "B27", "B39", "B44", "B58", "B62"]
+) -> List[str]:
+    """
+    Given a supertype name, reads the supertypes file in the supertypes directory, and returns a list of alleles.
+
+    :param supertype: A pre-defined supertype name.
+    :type supertype: Literal["A1", "A2", "A3", "A24", "A26", "B7", "B8", "B27", "B39", "B44", "B58", "B62"]
+
+    :return: A list of alleles.
+    """
+
+    alleles = open(SUPERTYPE_ALLELE_MAP.get(supertype), 'r').readlines()
+
+    return [allele.rstrip() for allele in alleles]
+
+
 class MhcISupertypes(Enum):
-    @classmethod
-    def _get_alleles(cls, supertype: str) -> List[str]:
-        alleles = open(SUPERTYPE_ALLELE_MAP.get(supertype), 'r').readlines()
-
-        return [allele.rstrip() for allele in alleles]
-
-    A1 = _get_alleles('A1')
-    A2 = _get_alleles('A2')
-    A3 = _get_alleles("A3")
-    A24 = _get_alleles("A24")
-    A26 = _get_alleles("A26")
-    B7 = _get_alleles("B7")
-    B8 = _get_alleles("B8")
-    B27 = _get_alleles("B27")
-    B39 = _get_alleles("B39")
-    B44 = _get_alleles("B44")
-    B58 = _get_alleles("B58")
-    B62 = _get_alleles("B62")
+    A1 = get_alleles('A1')
+    A2 = get_alleles('A2')
+    A3 = get_alleles("A3")
+    A24 = get_alleles("A24")
+    A26 = get_alleles("A26")
+    B7 = get_alleles("B7")
+    B8 = get_alleles("B8")
+    B27 = get_alleles("B27")
+    B39 = get_alleles("B39")
+    B44 = get_alleles("B44")
+    B58 = get_alleles("B58")
+    B62 = get_alleles("B62")
 
 
 class PredictionMethods(Enum):
-    NETMHCPAN_EL = "netmhcpan_el"
-    ANN = "ann"
+    # TODO: Only NETMHCPAN is in the top 3 of benchmarks. Others either are not in the top 3, or do not produce results.
+    #   Later implement mhcflurry and give users the option to choose the prediction method
+    #   Also, some of these other methods do not support all the alleles in the supertypes we have defined
+    #  (especially ANN, SMM)
+    #   NETMHCPAN, PICKPOCKET, NETMHCPAN_EL support everything.
+    # NETMHCPAN_EL = "netmhcpan_el"
+    # ANN = "ann"
     NETMHCPAN = "netmhcpan"
-    PICKPOCKET = "pickpocket"
-    SMM = "smm"
-    SMMPMBEC = "smmpmbec"
+    # PICKPOCKET = "pickpocket"
+    # SMM = "smm"
+    # SMMPMBEC = "smmpmbec"
+    # CONSENSUS = "consensus"
+    # NETMHCCONS = "netmhccons"
+    # NETMHCSTABPAN = "netmhcstabpan"
