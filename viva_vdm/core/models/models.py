@@ -110,21 +110,37 @@ class BlastDBModel(EmbeddedDocument):
     title = StringField(required=True)
 
 
-class MHCIDBModel(EmbeddedDocument):
+class EpitopeDBModel(EmbeddedDocument):
     sequence = StringField(required=True)
     percentile = IntField(required=True)
 
 
-class MHCIIDBModel(EmbeddedDocument):
-    sequence = StringField(required=True)
-    percentile = IntField(required=True)
+class MHCIISupertypes(EmbeddedDocument):
+    DR = EmbeddedDocumentListField(EpitopeDBModel, required=False)
+    DP = EmbeddedDocumentListField(EpitopeDBModel, required=False)
+    DQ = EmbeddedDocumentListField(EpitopeDBModel, required=False)
+
+
+class MHCISupertypes(EmbeddedDocument):
+    A1 = EmbeddedDocumentListField(EpitopeDBModel, required=False)
+    A2 = EmbeddedDocumentListField(EpitopeDBModel, required=False)
+    A3 = EmbeddedDocumentListField(EpitopeDBModel, required=False)
+    A24 = EmbeddedDocumentListField(EpitopeDBModel, required=False)
+    A26 = EmbeddedDocumentListField(EpitopeDBModel, required=False)
+    B7 = EmbeddedDocumentListField(EpitopeDBModel, required=False)
+    B8 = EmbeddedDocumentListField(EpitopeDBModel, required=False)
+    B27 = EmbeddedDocumentListField(EpitopeDBModel, required=False)
+    B39 = EmbeddedDocumentListField(EpitopeDBModel, required=False)
+    B44 = EmbeddedDocumentListField(EpitopeDBModel, required=False)
+    B58 = EmbeddedDocumentListField(EpitopeDBModel, required=False)
+    B62 = EmbeddedDocumentListField(EpitopeDBModel, required=False)
 
 
 class HCSResultsDBModel(EmbeddedDocument):
     prosite = EmbeddedDocumentListField(PrositeDBModel, required=False)
     blast = EmbeddedDocumentListField(BlastDBModel, required=False)
-    mhci = EmbeddedDocumentListField(MHCIDBModel, required=False)
-    mhcii = EmbeddedDocumentListField(MHCIIDBModel, required=False)
+    mhci = EmbeddedDocumentField(MHCISupertypes, required=False)
+    mhcii = EmbeddedDocumentListField(MHCIISupertypes, required=False)
 
 
 class HCSDBModel(Document):
