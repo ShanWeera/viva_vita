@@ -22,7 +22,6 @@ def get_alleles(supertype: Literal["DR", "DP", "DQ"]) -> List[str]:
     :return: A list of alleles.
     """
 
-    print(SUPERTYPE_ALLELE_MAP.get(supertype))
     alleles = open(SUPERTYPE_ALLELE_MAP.get(supertype), 'r').readlines()
 
     return [allele.rstrip() for allele in alleles]
@@ -35,11 +34,11 @@ class MhcIISupertypes(Enum):
 
 
 class PredictionMethods(Enum):
-    CONSENSUS = "consensus"
-    NETMHCIIPAN = "NetMHCIIpan"
-    NNALIGN = "nn_align-2.3"
-    SMMALIGN = "smm_align"
-    TEPITOPE = "tepitope"
-    COMBLIB = "comblib"
-    NETMHCPAN_EL = "netmhciipan_el"
-    NETMHCPAN_BA = "netmhciipan_ba"
+    # CONSENSUS = "consensus" doesn't work
+    NETMHCIIPAN = "NetMHCIIpan"  # works for all alleles of all supertypes
+    # NNALIGN = "nn_align-2.3" no results
+    # SMMALIGN = "smm_align" doesn't work
+    # TEPITOPE = "tepitope" doesn't support all the alleles in the supertypes
+    # COMBLIB = "comblib" doesn't do all the alleles in the supertypes
+    NETMHCPAN_EL = "netmhciipan_el"  # works for all alleles of all supertypes
+    NETMHCPAN_BA = "netmhciipan_ba"  # works for all alleles of all supertypes

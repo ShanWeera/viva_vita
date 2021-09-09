@@ -218,7 +218,7 @@ RUN rm *.gz
 ENV BLASTDB=/blastdb
 
 # Copy project files
-COPY pyproject.toml /viva_vdm/
+COPY poetry.lock pyproject.toml /viva_vdm/
 COPY viva_vdm /viva_vdm/viva_vdm/
 
 # Install project dependancies
