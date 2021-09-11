@@ -223,5 +223,11 @@ COPY viva_vdm /viva_vdm/viva_vdm/
 
 # Install project dependancies
 WORKDIR /viva_vdm
-RUN poetry export -f requirements.txt --output requirements.txt
-RUN python3.8 -m pip install -r requirements.txt
+RUN poetry config virtualenvs.in-project true  --local && \
+    poetry config virtualenvs.create true  --local &&  \
+    poetry config virtualenvs.options.system-site-packages true --local
+
+RUN poetry install
+
+# Download the trained models for mhcflurry
+RUN poetry run mhcflurry-downloads fetch

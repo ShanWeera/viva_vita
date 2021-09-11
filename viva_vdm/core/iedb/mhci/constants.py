@@ -59,12 +59,13 @@ class PredictionMethods(Enum):
     #   Also, some of these other methods do not support all the alleles in the supertypes we have defined
     #  (especially ANN, SMM)
     #   NETMHCPAN, PICKPOCKET, NETMHCPAN_EL support everything.
-    # NETMHCPAN_EL = "netmhcpan_el"
+    NETMHCPAN_EL = "netmhcpan_el"
     # ANN = "ann"
     NETMHCPAN = "netmhcpan"
-    # PICKPOCKET = "pickpocket"
+    PICKPOCKET = "pickpocket"
     # SMM = "smm"
     # SMMPMBEC = "smmpmbec"
     # CONSENSUS = "consensus"
     # NETMHCCONS = "netmhccons"
     # NETMHCSTABPAN = "netmhcstabpan"
+    MHCFLURRY = 'mhcflurry'
