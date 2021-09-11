@@ -1,3 +1,4 @@
+import mhcflurry
 from typing import List
 from seqpredictor import MHCBindingPredictions
 from util import InputData, OneSequenceInput
@@ -77,3 +78,48 @@ class MhcINetMhcPan(MHCIPredictorBase):
             results.extend(predictions)
 
         return results
+
+
+class MhcINetMhcPanEL(MhcINetMhcPan):
+    ...
+
+
+class MhcIPickpocket(MHCIPredictorBase):
+    def predict(self, sequence: str) -> List[MHCIEpitope]:
+        results = list()
+        input_protein = OneSequenceInput(sequence)
+
+        for allele in self.supertype.value:
+            input_data = InputData(
+                version=self.version,
+                method=self.method.value,
+                mhc=allele,
+                hla_seq=None,
+                length=self.length,
+                proteins=input_protein,
+            )
+
+            predictions = MHCBindingPredictions(input_data).predict(input_data.input_protein.as_amino_acid_text())
+            predictions = [
+                MHCIEpitope(sequence=sequence[pos : pos + self.length], percentile=hit[1])  # noqa: E203
+                for pos, hit in enumerate(predictions[0][2][0])
+                if hit[1] <= self.cutoff
+            ]
+            results.extend(predictions)
+
+        return results
+
+
+class MhcFlurry(MHCIPredictorBase):
+    def predict(self, sequence: str) -> List[MHCIEpitope]:
+        predictor = mhcflurry.Class1PresentationPredictor.load()
+
+        results = predictor.predict_sequences(
+            sequences=sequence,
+            alleles=self.supertype.value,
+            result="filtered",
+            comparison_quantity="affinity_percentile",
+            filter_value=self.cutoff,
+        ).to_dict(orient="records")
+
+        return [MHCIEpitope(sequence=hit.get("peptide"), percentile=hit.get("affinity_percentile")) for hit in results]

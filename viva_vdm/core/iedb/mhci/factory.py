@@ -1,5 +1,5 @@
 from .constants import PredictionMethods, MhcISupertypes
-from .wrappers import MhcINetMhcPan
+from .wrappers import MhcINetMhcPan, MhcINetMhcPanEL, MhcIPickpocket, MhcFlurry
 
 
 class MhcIPredictionFactory(object):
@@ -37,3 +37,9 @@ class MhcIPredictionFactory(object):
 
         if method == PredictionMethods.NETMHCPAN:
             return MhcINetMhcPan(**kwargs)
+        elif method == PredictionMethods.NETMHCPAN_EL:
+            return MhcINetMhcPanEL(**kwargs)
+        elif method == PredictionMethods.PICKPOCKET:
+            return MhcIPickpocket(**kwargs)
+        elif method == PredictionMethods.MHCFLURRY:
+            return MhcFlurry(**kwargs)
