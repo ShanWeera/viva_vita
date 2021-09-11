@@ -33,19 +33,32 @@ connect(
 
 
 class LoggerMessages(Enum):
-    JOB_REGISTERED = 'Job was registered with the database.'
-    HCS_ADDED = 'HCS were added to the job.'
     PROSITE_STARTING = 'Prosite analysis is starting.'
+    PROSITE_RUNNING = 'Prosite analysis is running.'
     PROSITE_ERROR = 'Prosite analysis failed.'
     PROSITE_COMPLETED = 'Prosite analysis completed.'
+
+    BLAST_STARTING = 'Blast analysis is starting.'
+    BLAST_RUNNING = 'Blast analysis is running.'
     BLAST_ERROR = 'Blast analysis failed.'
     BLAST_COMPLETED = 'Blast analysis completed.'
 
+    MHCI_STARTING = 'MHCI prediction is starting.'
+    MHCI_RUNNING = 'MHCI prediction is running.'
+    MHCI_ERROR = 'MHCI prediction failed.'
+    MHCI_COMPLETED = 'MHCI prediction completed.'
+
+    MHCII_STARTING = 'MHCII prediction is starting.'
+    MHCII_RUNNING = 'MHCII prediction is running.'
+    MHCII_ERROR = 'MHCII prediction failed.'
+    MHCII_COMPLETED = 'MHCII prediction completed.'
+
 
 class LoggerContexts(Enum):
-    general: str = 'general'
-    prosite: str = 'prosite'
     blast: str = 'blast'
+    prosite: str = 'prosite'
+    mhci: str = 'mhci'
+    mhcii: str = 'mhcii'
 
 
 class LoggerFlags(Enum):
@@ -86,6 +99,8 @@ class LogEntryDBModel(EmbeddedDocument):
 class LogsDBModel(Document):
     prosite = EmbeddedDocumentListField(LogEntryDBModel, required=False)
     blast = EmbeddedDocumentListField(LogEntryDBModel, required=False)
+    mhci = EmbeddedDocumentListField(LogEntryDBModel, required=False)
+    mhcii = EmbeddedDocumentListField(LogEntryDBModel, required=False)
 
     meta = {'collection': 'logs'}
 
@@ -93,6 +108,8 @@ class LogsDBModel(Document):
 class StepStatusesDBModel(EmbeddedDocument):
     prosite = EnumField(HCSStatuses, default=HCSStatuses.pending)
     blast = EnumField(HCSStatuses, default=HCSStatuses.pending)
+    mhci = EnumField(HCSStatuses, default=HCSStatuses.pending)
+    mhcii = EnumField(HCSStatuses, default=HCSStatuses.pending)
 
 
 class PrositeDBModel(EmbeddedDocument):
