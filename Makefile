@@ -27,7 +27,7 @@ endif
 all: setup install resources update tidy
 
 setup:
-	@curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/install-poetry.py | ${PYTHON} -
+	@curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/install-poetry.py | ${PYTHON} - -p
 	@docker-compose up -d
 
 install:
