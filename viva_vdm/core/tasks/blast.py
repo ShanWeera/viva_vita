@@ -54,10 +54,10 @@ def blast_task(hcs_id: str):
             strain = None
 
             if not sciname.isalnum():  # Strain name is included in scientific name
-                paranthesis_start = sciname.find("(") + 1
-                paranthesis_end = sciname.find(")", len(sciname) - 1)
+                parentheses_start = sciname.find("(") + 1
+                parentheses_end = sciname.find(")", len(sciname) - 1)
 
-                strain = sciname[paranthesis_start:paranthesis_end]
+                strain = sciname[parentheses_start:parentheses_end]
 
             blast_model_entries.append(
                 BlastDBModel(accession=desc.accession, species=desc.sciname, strain=strain, taxid=desc.taxid)
