@@ -86,6 +86,15 @@ class MhcINetMhcPanEL(MhcINetMhcPan):
 
 class MhcIPickpocket(MHCIPredictorBase):
     def predict(self, sequence: str) -> List[MHCIEpitope]:
+        """
+        This is the implementation of the prediction method for Pickpocket.
+
+        :param sequence: A protein sequences to predict epitopes for.
+        :type sequence: str
+
+        :return: A list of epitopes with IEDB percentile ranking that is equal to, or less than the defined cutoff.
+        """
+
         results = list()
         input_protein = OneSequenceInput(sequence)
 
@@ -112,6 +121,16 @@ class MhcIPickpocket(MHCIPredictorBase):
 
 class MhcFlurry(MHCIPredictorBase):
     def predict(self, sequence: str) -> List[MHCIEpitope]:
+        """
+        This is the implementation of the prediction method for Mhcflurry. This is not part of IEDB.
+        https://github.com/openvax/mhcflurry
+
+        :param sequence: A protein sequences to predict epitopes for.
+        :type sequence: str
+
+        :return: A list of epitopes with IEDB percentile ranking that is equal to, or less than the defined cutoff.
+        """
+
         predictor = mhcflurry.Class1PresentationPredictor.load()
 
         results = predictor.predict_sequences(
