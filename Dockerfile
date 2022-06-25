@@ -217,10 +217,19 @@ RUN tar -xvf taxdb.tar.gz
 RUN rm *.gz
 ENV BLASTDB=/blastdb
 
-# Copy project files
-COPY poetry.toml pyproject.toml /viva_vdm/
-COPY viva_vdm /viva_vdm/viva_vdm/
+# Copy project dependancy files
+COPY poetry.lock pyproject.toml /viva_vdm/
 
 # Install project dependancies
 WORKDIR /viva_vdm
-RUN poetry env use 3.8 && poetry install
+RUN poetry config virtualenvs.in-project true  --local && \
+    poetry config virtualenvs.create true  --local &&  \
+    poetry config virtualenvs.options.system-site-packages true --local
+
+RUN poetry install
+
+# Download the trained models for mhcflurry
+RUN poetry run mhcflurry-downloads fetch
+
+# Copy project files
+COPY viva_vdm /viva_vdm/viva_vdm/

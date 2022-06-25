@@ -13,10 +13,10 @@ from ..models.models import (
 from ..blast.models import BlastResults
 
 
-@app.task(name='Blast')
+@app.task(name='MHCI')
 def blast_task(hcs_id: str):
     """
-    This is the Celery task for Blast analysis.
+    This is the Celery task for MHCI predictions.
 
     :param hcs_id: A valid HCS from the provided job name.
     :type hcs_id: str
@@ -54,10 +54,10 @@ def blast_task(hcs_id: str):
             strain = None
 
             if not sciname.isalnum():  # Strain name is included in scientific name
-                parentheses_start = sciname.find("(") + 1
-                parentheses_end = sciname.find(")", len(sciname) - 1)
+                paranthesis_start = sciname.find("(") + 1
+                paranthesis_end = sciname.find(")", len(sciname) - 1)
 
-                strain = sciname[parentheses_start:parentheses_end]
+                strain = sciname[paranthesis_start:paranthesis_end]
 
             blast_model_entries.append(
                 BlastDBModel(accession=desc.accession, species=desc.sciname, strain=strain, taxid=desc.taxid)
