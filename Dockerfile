@@ -1,5 +1,9 @@
 FROM centos:latest
 
+RUN cd /etc/yum.repos.d/
+RUN sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
+RUN sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
+
 # Update image
 RUN yum update -y && yum upgrade -y
 
@@ -10,7 +14,7 @@ RUN yum install -y python3.8 python3-pip wget perl tcsh
 RUN dnf --enablerepo=powertools install -y perl-List-MoreUtils
 
 # Download Blast
-RUN wget -nv --show-progress --progress=bar:force https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast-2.12.0+-1.x86_64.rpm
+RUN wget -nv --show-progress --progress=bar:force https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.13.0/ncbi-blast-2.13.0-1.x86_64.rpm
 
 # Install Blast
 RUN yum localinstall -y *.rpm && rm *.rpm

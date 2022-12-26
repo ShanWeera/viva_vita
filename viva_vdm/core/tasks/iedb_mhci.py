@@ -28,13 +28,13 @@ def blast_task(hcs_id: str):
     # We then retrieve the job from the database
     hcs = hcs_qs.get()
 
-    # If Blast analysis has already been done, we exit gracefully
-    if hcs.status.blast == HCSStatuses.completed:
+    # If MHCI analysis has already been done, we exit gracefully
+    if hcs.status.mhci == HCSStatuses.completed:
         return
 
     # We then update the log, and status to inform we are starting analysis
-    hcs_qs.update_log(LoggerContexts.prosite, LoggerFlags.info, LoggerMessages.PROSITE_STARTING)
-    hcs.status.blast = HCSStatuses.running
+    hcs_qs.update_log(LoggerContexts.mhci, LoggerFlags.info, LoggerMessages.MHCI_STARTING)
+    hcs.status.mhci = HCSStatuses.running
 
     # We then get the HCS sequence, and run Blast analysis
     try:

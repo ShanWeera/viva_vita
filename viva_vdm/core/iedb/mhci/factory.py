@@ -43,3 +43,5 @@ class MhcIPredictionFactory(object):
             return MhcIPickpocket(**kwargs)
         elif method == PredictionMethods.MHCFLURRY:
             return MhcFlurry(**kwargs)
+
+        raise NotImplementedError(f'The method {method} is not implemented')

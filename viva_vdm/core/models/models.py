@@ -61,6 +61,19 @@ class LoggerContexts(Enum):
     mhcii: str = 'mhcii'
 
 
+class MHCIPredictionMethods(Enum):
+    NETMHCPAN_EL: str = "netmhcpan_el"
+    NETMHCPAN: str = "netmhcpan"
+    PICKPOCKET: str = "pickpocket"
+    MHCFLURRY: str = 'mhcflurry'
+
+
+class MHCIIPredictionMethods(Enum):
+    NETMHCIIPAN: str = "NetMHCIIpan"
+    NETMHCPAN_EL: str = "netmhciipan_el"
+    NETMHCPAN_BA: str = "netmhciipan_ba"
+
+
 class LoggerFlags(Enum):
     info: str = 'info'
     error: str = 'error'
@@ -167,6 +180,8 @@ class HCSDBModel(Document):
     results = EmbeddedDocumentField(HCSResultsDBModel, required=True, default=HCSResultsDBModel())
     status = EmbeddedDocumentField(StepStatusesDBModel, required=True, default=StepStatusesDBModel())
     logs = FollowReferenceField(LogsDBModel, required=False, default=LogsDBModel().save())
+    mhci_prediction_method = EnumField(MHCIPredictionMethods, default=MHCIPredictionMethods.NETMHCPAN)
+    mhcii_prediction_method = EnumField(MHCIIPredictionMethods, default=MHCIIPredictionMethods.NETMHCIIPAN)
 
     meta = {'queryset_class': LoggerQuerySet, 'collection': 'hcs'}
 

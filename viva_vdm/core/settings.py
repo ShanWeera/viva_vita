@@ -15,7 +15,6 @@ class ResourceConfig(BaseSettings):
     mongo_ddm_password: str
 
     mongo_ddm_database: str
-    mongo_celery_database: str
 
     rabbitmq_host: str
     rabbitmq_username: str
@@ -29,6 +28,7 @@ class ResourceConfig(BaseSettings):
         fields = {
             'mongo_ddm_username': {'env': ['MONGO_DDM_USERNAME']},
             'mongo_ddm_password': {'env': ['MONGO_DDM_PASSWORD']},
+            'mongo_ddm_database': {'env': ['MONGO_DDM_DATABASE']},
             'mongo_root_username': {'env': ['MONGO_INITDB_ROOT_USERNAME']},
             'mongo_root_password': {'env': ['MONGO_INITDB_ROOT_PASSWORD']},
             'rabbitmq_host': {'env': ['RABBITMQ_SERVICE_HOST']},
@@ -43,6 +43,7 @@ class AppConfig(BaseSettings):
     prosite_db_path: str
 
     blast_exe_path: str
+    blastdb_path: str
 
     class Config:
         env_file: str = '.env'
@@ -54,4 +55,5 @@ class AppConfig(BaseSettings):
             'prosite_exe_path': {'env': ['PROSITE_INSTALL_PATH']},
             'prosite_db_path': {'env': ['PROSITE_DB_PATH']},
             'blast_exe_path': {'env': ['BLAST_INSTALL_PATH']},
+            'blastdb_path': {'env': ['BLASTDB']},
         }
