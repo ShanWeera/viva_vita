@@ -1,5 +1,9 @@
 FROM centos:latest
 
+RUN cd /etc/yum.repos.d/
+RUN sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
+RUN sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
+
 # Update image
 RUN yum update -y && yum upgrade -y
 
@@ -10,7 +14,7 @@ RUN yum install -y python3.8 python3-pip wget perl tcsh
 RUN dnf --enablerepo=powertools install -y perl-List-MoreUtils
 
 # Download Blast
-RUN wget -nv --show-progress --progress=bar:force https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast-2.12.0+-1.x86_64.rpm
+RUN wget -nv --show-progress --progress=bar:force https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.13.0/ncbi-blast-2.13.0-1.x86_64.rpm
 
 # Install Blast
 RUN yum localinstall -y *.rpm && rm *.rpm
@@ -217,10 +221,19 @@ RUN tar -xvf taxdb.tar.gz
 RUN rm *.gz
 ENV BLASTDB=/blastdb
 
-# Copy project files
-COPY poetry.toml pyproject.toml /viva_vdm/
-COPY viva_vdm /viva_vdm/viva_vdm/
+# Copy project dependancy files
+COPY poetry.lock pyproject.toml /viva_vdm/
 
 # Install project dependancies
 WORKDIR /viva_vdm
-RUN poetry env use 3.8 && poetry install
+RUN poetry config virtualenvs.in-project true  --local && \
+    poetry config virtualenvs.create true  --local &&  \
+    poetry config virtualenvs.options.system-site-packages true --local
+
+RUN poetry install
+
+# Download the trained models for mhcflurry
+RUN poetry run mhcflurry-downloads fetch
+
+# Copy project files
+COPY viva_vdm /viva_vdm/viva_vdm/

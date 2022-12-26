@@ -107,7 +107,7 @@ class PrositeScan(object):
         :type output_width: int
 
         Example:
-            >>> from viva_ddm.core.prosite import PrositeScan
+            >>> from viva_vdm.core.prosite import PrositeScan
             >>> scanner = PrositeScan(output_xpsa=True, cutoff_value=-1, is_fasta=True, show_prof_start_end=True)
             >>> results = scanner.scan("SSVSSFERFEIFPKESSWPNHNTNGVTAACSHEGKSSFYRNLLWLTEKE")
         """

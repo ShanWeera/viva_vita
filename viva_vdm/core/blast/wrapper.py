@@ -1,4 +1,5 @@
 import json
+from os import environ
 from subprocess import run, PIPE
 from typing import List
 
@@ -6,6 +7,8 @@ from .constants import Databases, OutputFormats, Matrices
 from .exceptions import BlastException, NotImplementedException
 from ..settings import AppConfig
 from .models import BlastResults
+
+app_config = AppConfig()
 
 
 class BlastCliWrapper(object):
@@ -41,6 +44,10 @@ class BlastCliWrapper(object):
         :type tax_ids_exclude: list
         :type tax_ids_include: list
         :type max_target_seqs: int
+
+        Example:
+        >>> from viva_vdm.core.blast import BlastCliWrapper
+        >>> results = BlastCliWrapper().run_blast('SSVSSFERFEIFPKESSWPNHNTNGVTAACSHEGKSSFYRNLLWLTEKE')
         """
 
         if tax_ids_exclude is None:
@@ -69,7 +76,19 @@ class BlastCliWrapper(object):
         """
 
         arguments = self._get_blast_args()
-        process = run(arguments, stdout=PIPE, stderr=PIPE, encoding='ascii', input=sequence)
+
+        # Without the system environment vars blast's connection to NCBI fails. Not really sure why but adding this
+        # helps
+        current_envars = environ.copy()
+
+        process = run(
+            arguments,
+            stdout=PIPE,
+            stderr=PIPE,
+            encoding='ascii',
+            input=sequence,
+            env={**current_envars, 'BLASTDB': app_config.blastdb_path},
+        )
 
         if process.returncode != 0:
             raise BlastException(sequence, arguments, process.stderr)

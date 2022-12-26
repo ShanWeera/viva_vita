@@ -13,10 +13,10 @@ from ..models.models import (
 from ..blast.models import BlastResults
 
 
-@app.task(name='Blast')
+@app.task(name='MHCI')
 def blast_task(hcs_id: str):
     """
-    This is the Celery task for Blast analysis.
+    This is the Celery task for MHCI predictions.
 
     :param hcs_id: A valid HCS from the provided job name.
     :type hcs_id: str
@@ -28,13 +28,13 @@ def blast_task(hcs_id: str):
     # We then retrieve the job from the database
     hcs = hcs_qs.get()
 
-    # If Blast analysis has already been done, we exit gracefully
-    if hcs.status.blast == HCSStatuses.completed:
+    # If MHCI analysis has already been done, we exit gracefully
+    if hcs.status.mhci == HCSStatuses.completed:
         return
 
     # We then update the log, and status to inform we are starting analysis
-    hcs_qs.update_log(LoggerContexts.prosite, LoggerFlags.info, LoggerMessages.PROSITE_STARTING)
-    hcs.status.blast = HCSStatuses.running
+    hcs_qs.update_log(LoggerContexts.mhci, LoggerFlags.info, LoggerMessages.MHCI_STARTING)
+    hcs.status.mhci = HCSStatuses.running
 
     # We then get the HCS sequence, and run Blast analysis
     try:
@@ -54,10 +54,10 @@ def blast_task(hcs_id: str):
             strain = None
 
             if not sciname.isalnum():  # Strain name is included in scientific name
-                parentheses_start = sciname.find("(") + 1
-                parentheses_end = sciname.find(")", len(sciname) - 1)
+                paranthesis_start = sciname.find("(") + 1
+                paranthesis_end = sciname.find(")", len(sciname) - 1)
 
-                strain = sciname[parentheses_start:parentheses_end]
+                strain = sciname[paranthesis_start:paranthesis_end]
 
             blast_model_entries.append(
                 BlastDBModel(accession=desc.accession, species=desc.sciname, strain=strain, taxid=desc.taxid)
