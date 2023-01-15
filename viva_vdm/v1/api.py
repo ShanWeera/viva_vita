@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .endpoints import job, results
+from .endpoints import job_router
 
 app = FastAPI(
     title="ViTA RESTful API",
@@ -9,8 +9,7 @@ app = FastAPI(
     contact={'name': 'Shan Tharanga', 'email': 'stwm2@student.london.ac.uk'},
     version="1.0.0",
 )
-app.include_router(job.router)
-app.include_router(results.router)
+app.include_router(job_router)
 
 app.add_middleware(
     CORSMiddleware,

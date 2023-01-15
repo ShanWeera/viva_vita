@@ -1,34 +1,38 @@
 from ..blast.exceptions import BlastException
 from ..blast.wrapper import BlastCliWrapper
 from ..celery_app import app
-from ..models.models import (
+from viva_vdm.core.models import (
     HCSResultsDBModel,
-    HCSDBModel,
     LoggerContexts,
     LoggerFlags,
     LoggerMessages,
     HCSStatuses,
     BlastDBModel,
+    HCSDBModel,
+    JobDBModel,
 )
-from ..blast.models import BlastResults
+from viva_vdm.core.blast.models import BlastResults
 
 
-@app.task(name='MHCI')
+@app.task(name='Blast')
 def blast_task(hcs_id: str):
     """
-    This is the Celery task for MHCI predictions.
+    This is the Celery task for Blast analysis.
 
     :param hcs_id: A valid HCS from the provided job name.
     :type hcs_id: str
     """
 
-    # We get the queryset so we can update the logs easier
+    # We get the queryset (ie: use filter) so we can update the logs easier
     hcs_qs = HCSDBModel.objects.filter(id=hcs_id)
 
     # We then retrieve the job from the database
     hcs = hcs_qs.get()
 
-    # If MHCI analysis has already been done, we exit gracefully
+    # We need to job because need to get the parameters for the job
+    job = JobDBModel.objects.get(hcs__in=[hcs])
+
+    # If Blast analysis has already been done, we exit gracefully
     if hcs.status.mhci == HCSStatuses.completed:
         return
 
@@ -38,7 +42,7 @@ def blast_task(hcs_id: str):
 
     # We then get the HCS sequence, and run Blast analysis
     try:
-        result = BlastCliWrapper().run_blast(hcs.sequence)  # type: BlastResults
+        result = BlastCliWrapper(tax_ids_exclude=[job.taxonomy_id]).run_blast(hcs.sequence)  # type: BlastResults
     except BlastException as ex:
         # Update the log to indicate error
         hcs_qs.update_log(LoggerContexts.prosite, LoggerFlags.error, LoggerMessages.BLAST_ERROR)
@@ -54,10 +58,10 @@ def blast_task(hcs_id: str):
             strain = None
 
             if not sciname.isalnum():  # Strain name is included in scientific name
-                paranthesis_start = sciname.find("(") + 1
-                paranthesis_end = sciname.find(")", len(sciname) - 1)
+                parentheses_start = sciname.find("(") + 1
+                parentheses_end = sciname.find(")", len(sciname) - 1)
 
-                strain = sciname[paranthesis_start:paranthesis_end]
+                strain = sciname[parentheses_start:parentheses_end]
 
             blast_model_entries.append(
                 BlastDBModel(accession=desc.accession, species=desc.sciname, strain=strain, taxid=desc.taxid)

@@ -1,16 +1,17 @@
 from ..blast.exceptions import BlastException
 from ..blast.wrapper import BlastCliWrapper
 from ..celery_app import app
-from ..models.models import (
+from viva_vdm.core.models import (
     HCSResultsDBModel,
-    HCSDBModel,
     LoggerContexts,
     LoggerFlags,
     LoggerMessages,
     HCSStatuses,
     BlastDBModel,
+    HCSDBModel,
+    JobDBModel,
 )
-from ..blast.models import BlastResults
+from viva_vdm.core.blast.models import BlastResults
 
 
 @app.task(name='Blast')
@@ -22,11 +23,14 @@ def blast_task(hcs_id: str):
     :type hcs_id: str
     """
 
-    # We get the queryset so we can update the logs easier
+    # We get the queryset (ie: use filter) so we can update the logs easier
     hcs_qs = HCSDBModel.objects.filter(id=hcs_id)
 
     # We then retrieve the job from the database
     hcs = hcs_qs.get()
+
+    # We need to job because need to get the parameters for the job
+    job = JobDBModel.objects.get(hcs__in=[hcs])
 
     # If Blast analysis has already been done, we exit gracefully
     if hcs.status.blast == HCSStatuses.completed:
@@ -38,7 +42,7 @@ def blast_task(hcs_id: str):
 
     # We then get the HCS sequence, and run Blast analysis
     try:
-        result = BlastCliWrapper().run_blast(hcs.sequence)  # type: BlastResults
+        result = BlastCliWrapper(tax_ids_exclude=[job.taxonomy_id]).run_blast(hcs.sequence)  # type: BlastResults
     except BlastException as ex:
         # Update the log to indicate error
         hcs_qs.update_log(LoggerContexts.prosite, LoggerFlags.error, LoggerMessages.BLAST_ERROR)

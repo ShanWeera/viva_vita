@@ -1,14 +1,14 @@
 from ..prosite.exceptions import PrositeError
 from ..prosite.wrapper import PrositeScan
 from ..celery_app import app
-from ..models.models import (
-    PrositeDBModel,
+from viva_vdm.core.models import (
     HCSResultsDBModel,
-    HCSDBModel,
     LoggerContexts,
     LoggerFlags,
     LoggerMessages,
     HCSStatuses,
+    HCSDBModel,
+    PrositeDBModel,
 )
 
 
@@ -21,7 +21,7 @@ def prosite_task(hcs_id: str):
     :type hcs_id: str
     """
 
-    # We get the queryset so we can update the logs easier
+    # We get the queryset (ie: use filter) so we can update the logs easier
     hcs_qs = HCSDBModel.objects.filter(id=hcs_id)
 
     # We then retrieve the job from the database

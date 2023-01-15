@@ -237,3 +237,6 @@ RUN poetry run mhcflurry-downloads fetch
 
 # Copy project files
 COPY viva_vdm /viva_vdm/viva_vdm/
+
+# ONLY DEV
+EXPOSE 8000

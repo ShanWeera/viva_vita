@@ -1,2 +1,1 @@
-import job
-import results
+from .job import router as job_router

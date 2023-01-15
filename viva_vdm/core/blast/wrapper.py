@@ -14,6 +14,7 @@ app_config = AppConfig()
 class BlastCliWrapper(object):
     def __init__(
         self,
+        *,
         database: Databases = Databases.NON_REDUNDANT,
         matrix: Matrices = Matrices.PAM30,
         evalue: float = 0.05,
