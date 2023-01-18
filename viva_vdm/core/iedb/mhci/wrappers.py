@@ -1,3 +1,5 @@
+from viva_vdm.core.iedb.mhci import add_seq_predictor_path  # noqa
+
 import mhcflurry
 from typing import List
 from seqpredictor import MHCBindingPredictions
@@ -31,7 +33,7 @@ class MHCIPredictorBase(object):
 
         Example:
             >>> from viva_vdm.core.iedb.mhci.constants import MhcISupertypes, PredictionMethods
-            >>> from viva_vdm.core.iedb.mhci.wrapper import MhcINetMhcPan
+            >>> from viva_vdm.core.iedb.mhci.wrappers import MhcINetMhcPan
             >>> prediction_supertype = MhcISupertypes.A1
             >>> predictor = MhcINetMhcPan(prediction_supertype)
             >>> results = predictor.predict("MDSNTVSSFQDI")
@@ -64,7 +66,7 @@ class MhcINetMhcPan(MHCIPredictorBase):
         for allele in self.supertype.value:
             input_data = InputData(
                 version=self.version,
-                method=self.method.value,
+                method=self.method,
                 mhc=allele,
                 hla_seq=None,
                 length=self.length,
@@ -72,10 +74,23 @@ class MhcINetMhcPan(MHCIPredictorBase):
             )
 
             predictions = MHCBindingPredictions(input_data).predict(input_data.input_protein.as_amino_acid_text())
-            predictions = [
-                MHCIEpitope(sequence=hit[0], percentile=hit[3]) for hit in predictions[0][2][0] if hit[3] <= self.cutoff
-            ]
-            results.extend(predictions)
+
+            if not predictions:
+                continue
+
+            for allele_predictions in predictions:
+                allele = allele_predictions[1]
+                hits = list()
+
+                for allele_prediction in allele_predictions[2][0]:
+                    if not allele_prediction[3] <= self.cutoff:
+                        continue
+
+                    hits.append(
+                        MHCIEpitope(sequence=allele_prediction[0], percentile=allele_prediction[3], allele=allele)
+                    )
+
+                results.extend(hits)
 
         return results
 

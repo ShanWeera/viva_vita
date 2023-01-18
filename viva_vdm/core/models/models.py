@@ -141,6 +141,7 @@ class BlastDBModel(EmbeddedDocument):
 
 
 class EpitopeDBModel(EmbeddedDocument):
+    allele = StringField(required=True)
     sequence = StringField(required=True)
     percentile = IntField(required=True)
 

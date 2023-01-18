@@ -29,12 +29,12 @@ def blast_task(hcs_id: str):
     # We then retrieve the job from the database
     hcs = hcs_qs.get()
 
-    # We need to job because need to get the parameters for the job
-    job = JobDBModel.objects.get(hcs__in=[hcs])
-
     # If Blast analysis has already been done, we exit gracefully
     if hcs.status.blast == HCSStatuses.completed:
         return
+
+    # We need to job because need to get the parameters for the job
+    job = JobDBModel.objects.get(hcs__in=[hcs])
 
     # We then update the log, and status to inform we are starting analysis
     hcs_qs.update_log(LoggerContexts.prosite, LoggerFlags.info, LoggerMessages.PROSITE_STARTING)

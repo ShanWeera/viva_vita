@@ -238,5 +238,8 @@ RUN poetry run mhcflurry-downloads fetch
 # Copy project files
 COPY viva_vdm /viva_vdm/viva_vdm/
 
+# Add the paths to mhci and mhcii repo (else: ModuleNotFoundError: No module named 'seqpredictor')
+ENV PATH=/viva_vdm:/mhc_i/src:/mhc_ii:$PATH
+
 # ONLY DEV
 EXPOSE 8000
