@@ -2,7 +2,6 @@ from ..prosite.exceptions import PrositeError
 from ..prosite.wrapper import PrositeScan
 from ..celery_app import app
 from viva_vdm.core.models import (
-    HCSResultsDBModel,
     LoggerContexts,
     LoggerFlags,
     LoggerMessages,
@@ -47,18 +46,12 @@ def prosite_task(hcs_id: str):
 
         raise ex
 
-    prosite_model = [
+    hcs.results.prosite = [
         PrositeDBModel(accession=result.accession, description=result.description, start=result.start, end=result.end)
         for result in results
     ]
-    results_model = HCSResultsDBModel(prosite=prosite_model)
 
-    # We update the log to indicate that we are done
     hcs_qs.update_log(LoggerContexts.prosite, LoggerFlags.error, LoggerMessages.PROSITE_COMPLETED)
-
-    # We update the status to indicate this HCS has gone through Prosite analysis successfully
     hcs.status.prosite = HCSStatuses.completed
 
-    # We then save it to the hcs instance
-    hcs.results = results_model
     hcs.save()

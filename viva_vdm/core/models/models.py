@@ -143,7 +143,7 @@ class BlastDBModel(EmbeddedDocument):
 class EpitopeDBModel(EmbeddedDocument):
     allele = StringField(required=True)
     sequence = StringField(required=True)
-    percentile = IntField(required=True)
+    percentile = FloatField(required=True)
 
 
 class MHCIISupertypes(EmbeddedDocument):
@@ -171,7 +171,7 @@ class HCSResultsDBModel(EmbeddedDocument):
     prosite = EmbeddedDocumentListField(PrositeDBModel, required=False)
     blast = EmbeddedDocumentListField(BlastDBModel, required=False)
     mhci = EmbeddedDocumentField(MHCISupertypes, required=False)
-    mhcii = EmbeddedDocumentListField(MHCIISupertypes, required=False)
+    mhcii = EmbeddedDocumentField(MHCIISupertypes, required=False)
 
 
 class HCSDBModel(Document):

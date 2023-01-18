@@ -1,3 +1,4 @@
+from viva_vdm.core.tasks.iedb_mhcii import mhcii_task
 from viva_vdm.v1.models import CreateJobRequest
 from viva_vdm.core.models import JobDBModel, HCSDBModel
 
@@ -27,7 +28,12 @@ class CreateJobHelper(object):
         for hcs in self.job_instance.hcs:
             mhci_task(hcs.id)
 
+    def process_hcs_mhcii(self):
+        for hcs in self.job_instance.hcs:
+            mhcii_task(hcs.id)
+
     def process(self):
-        self.process_hcs_blast()
-        self.process_hcs_prosite()
-        self.process_hcs_mhci()
+        # self.process_hcs_blast()
+        # self.process_hcs_prosite()
+        # self.process_hcs_mhci()
+        self.process_hcs_mhcii()

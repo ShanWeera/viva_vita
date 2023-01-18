@@ -60,13 +60,15 @@ class MhcIINetMhcPan(MHCIIPredictorBase):
         allele_count = len(self.supertype.value)
         results = list()
 
-        predictions = MhciiPredictor(self.method.value, self.supertype.value, [self.length] * allele_count).predict(
+        predictions = MhciiPredictor(self.method, self.supertype.value, [self.length] * allele_count).predict(
             [sequence]
         )
 
         for allele in predictions:
+            allele_name = allele[1]
+
             for epitope in allele[2][0]:
                 if epitope[2] <= self.cutoff:
-                    results.append(MHCIIEpitope(sequence=epitope[0], percentile=epitope[2]))
+                    results.append(MHCIIEpitope(sequence=epitope[0], percentile=epitope[2], allele=allele_name))
 
         return results

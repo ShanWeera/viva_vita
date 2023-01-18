@@ -9,9 +9,10 @@ from viva_vdm.core.models import (
 
 from viva_vdm.core.iedb.mhci.constants import MhcISupertypes
 from viva_vdm.core.iedb.mhci.factory import MhcIPredictionFactory
+from viva_vdm.core.models.models import MHCISupertypes
 
 
-@app.task(name='Blast')
+@app.task(name='MHCI')
 def mhci_task(hcs_id: str):
     """
     This is the Celery task for Blast analysis.
@@ -36,3 +37,10 @@ def mhci_task(hcs_id: str):
     for supertype in MhcISupertypes:
         results = MhcIPredictionFactory(supertype=supertype, method=mhci_prediction_method).predict(hcs.sequence)
         supertype_results[supertype.name] = [result.dict() for result in results]
+
+    hcs.results.mhci = MHCISupertypes(**supertype_results)
+
+    hcs_qs.update_log(LoggerContexts.mhci, LoggerFlags.error, LoggerMessages.MHCI_COMPLETED)
+    hcs.status.mhci = HCSStatuses.completed
+
+    hcs.save()
