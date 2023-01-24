@@ -13,6 +13,10 @@ class HCSApiModel(BaseModel):
     mhcii_prediction_method: MHCIIPredictionMethods = Field(..., title='IEDB MHCII prediction method to use')
 
 
+class JobHCSListModel(HCSApiModel):
+    id: str = Field(..., title='Automatically generated ID for the HCS', alias='_id')
+
+
 class CreateJobRequest(BaseModel):
     """
     This is the API model for a job submit request.

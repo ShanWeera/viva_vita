@@ -88,6 +88,14 @@ class HCSStatuses(Enum):
     failed: str = 'failed'
 
 
+class JobStatuses(Enum):
+    pending: str = 'pending'
+    starting: str = 'starting'
+    partial: str = 'partial'
+    completed: str = 'completed'
+    error: str = 'failed'
+
+
 class LoggerQuerySet(QuerySet):
     def update_log(self, context: LoggerContexts, flag: LoggerFlags, msg: LoggerMessages):
         entry = LogEntryDBModel(flag=flag, message=msg)
@@ -192,5 +200,6 @@ class JobDBModel(Document):
     taxonomy_id = IntField(required=True)
     protein_name = StringField(required=True)
     hcs = ListField(FollowReferenceField(HCSDBModel), required=True)
+    status = EnumField(JobStatuses, default=JobStatuses.pending)
 
     meta = {'collection': 'job'}

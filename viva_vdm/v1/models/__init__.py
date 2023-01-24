@@ -1,1 +1,1 @@
-from .job import CreateJobRequest, HCSApiModel
+from .job import CreateJobRequest, HCSApiModel, JobHCSListModel

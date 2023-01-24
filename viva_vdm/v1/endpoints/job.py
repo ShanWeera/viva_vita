@@ -1,6 +1,10 @@
-from fastapi import APIRouter, status
+from typing import List
 
-from viva_vdm.v1.models import CreateJobRequest
+from fastapi import APIRouter, status, HTTPException
+from mongoengine.errors import DoesNotExist
+
+from viva_vdm.core.models import JobDBModel, HCSStatuses
+from viva_vdm.v1.models import CreateJobRequest, JobHCSListModel
 from viva_vdm.v1.endpoints.helpers import CreateJobHelper
 
 router = APIRouter(prefix='/job', tags=['job'])
@@ -18,3 +22,43 @@ def create_job(payload: CreateJobRequest) -> str:
     job_id = CreateJobHelper(payload).process()
 
     return job_id
+
+
+@router.get(
+    '/{job_id}/status',
+    status_code=status.HTTP_200_OK,
+    response_description="Returns the current status of the job",
+    response_model=HCSStatuses,
+)
+def get_job_status(job_id: str) -> HCSStatuses:
+    """
+    Get the status of a job.
+
+    If the provided job id is not found an HTTP 404 status is returned. A successful request will return an HTTP 200.
+    """
+
+    try:
+        return JobDBModel.objects.get(id=job_id).status
+    except DoesNotExist:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job not found, consider creating one.")
+
+
+@router.get(
+    '/{job_id}/hcs',
+    status_code=status.HTTP_200_OK,
+    response_description="Returns a list of HCS for the job ID provide",
+    response_model=List[JobHCSListModel],
+)
+def get_job_hcs(job_id: str) -> List[JobHCSListModel]:
+    """
+    Get a list of HCS for the job ID
+
+    If the provided job id is not found an HTTP 404 status is returned. A successful request will return an HTTP 200.
+    """
+
+    try:
+        job = JobDBModel.objects.get(id=job_id)
+    except DoesNotExist:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job not found, consider creating one.")
+
+    return [JobHCSListModel(**hcs.to_mongo().to_dict()) for hcs in job.hcs]

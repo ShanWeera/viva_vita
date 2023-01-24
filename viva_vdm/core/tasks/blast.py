@@ -64,7 +64,9 @@ def blast_task(hcs_id: str):
                 strain = sciname[parentheses_start:parentheses_end]
 
             blast_model_entries.append(
-                BlastDBModel(accession=desc.accession, species=desc.sciname, strain=strain, taxid=desc.taxid)
+                BlastDBModel(
+                    accession=desc.accession, species=desc.sciname, strain=strain, taxid=desc.taxid, title=desc.title
+                )
             )
 
     results_model = HCSResultsDBModel(blast=blast_model_entries)
