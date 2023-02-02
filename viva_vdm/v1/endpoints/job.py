@@ -3,7 +3,8 @@ from typing import List
 from fastapi import APIRouter, status, HTTPException
 from mongoengine.errors import DoesNotExist
 
-from viva_vdm.core.models import JobDBModel, HCSStatuses
+from viva_vdm.core.models import JobDBModel
+from viva_vdm.core.models.models import JobStatuses
 from viva_vdm.v1.models import CreateJobRequest, JobHCSListModel
 from viva_vdm.v1.endpoints.helpers import CreateJobHelper
 
@@ -28,9 +29,9 @@ def create_job(payload: CreateJobRequest) -> str:
     '/{job_id}/status',
     status_code=status.HTTP_200_OK,
     response_description="Returns the current status of the job",
-    response_model=HCSStatuses,
+    response_model=JobStatuses,
 )
-def get_job_status(job_id: str) -> HCSStatuses:
+def get_job_status(job_id: str) -> JobStatuses:
     """
     Get the status of a job.
 
@@ -38,8 +39,8 @@ def get_job_status(job_id: str) -> HCSStatuses:
     """
 
     try:
-        job_status = JobDBModel.objects.get(id=job_id).status.value
-        return HCSStatuses[job_status]
+        job_status = JobDBModel.objects.get(id=job_id).status
+        return job_status
     except DoesNotExist:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job not found, consider creating one.")
 

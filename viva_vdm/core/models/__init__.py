@@ -7,7 +7,6 @@ from .models import (
     LoggerContexts,
     LoggerFlags,
     LoggerMessages,
-    HCSStatuses,
     BlastDBModel,
     PrositeDBModel,
 )
