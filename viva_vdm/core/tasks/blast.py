@@ -1,12 +1,11 @@
-from ..blast.exceptions import BlastException
-from ..blast.wrapper import BlastCliWrapper
-from ..celery_app import app
+from viva_vdm.core.blast.exceptions import BlastException
+from viva_vdm.core.blast.wrapper import BlastCliWrapper
+from viva_vdm.core.celery_app import app
 from viva_vdm.core.models import (
     HCSResultsDBModel,
     LoggerContexts,
     LoggerFlags,
     LoggerMessages,
-    HCSStatuses,
     BlastDBModel,
     HCSDBModel,
     JobDBModel,
@@ -14,50 +13,27 @@ from viva_vdm.core.models import (
 from viva_vdm.core.blast.models import BlastResults
 
 
-@app.task(name='Blast')
-def blast_task(hcs_id: str):
+def blast_hcs(hcs_id: str, taxonomy_id: int):
     """
     This is the Celery task for Blast analysis.
 
     :param hcs_id: A valid HCS from the provided job name.
     :type hcs_id: str
+
+    :param taxonomy_id: The taxonomy ID of the HCS
+    :type taxonomy_id: int
     """
 
-    # We get the queryset (ie: use filter) so we can update the logs easier
-    hcs_qs = HCSDBModel.objects.filter(id=hcs_id)
-
-    # We then retrieve the job from the database
-    hcs = hcs_qs.get()
-
-    # If Blast analysis has already been done, we exit gracefully
-    if hcs.status.blast == HCSStatuses.completed:
-        return
-
-    # We need to job because need to get the parameters for the job
-    job = JobDBModel.objects.get(hcs__in=[hcs])
-
-    # We then update the log, and status to inform we are starting analysis
-    hcs_qs.update_log(LoggerContexts.prosite, LoggerFlags.info, LoggerMessages.PROSITE_STARTING)
-    hcs.status.blast = HCSStatuses.running
-
-    # We then get the HCS sequence, and run Blast analysis
-    try:
-        result = BlastCliWrapper(tax_ids_exclude=[job.taxonomy_id]).run_blast(hcs.sequence)  # type: BlastResults
-    except BlastException as ex:
-        # Update the log to indicate error
-        hcs_qs.update_log(LoggerContexts.prosite, LoggerFlags.error, LoggerMessages.BLAST_ERROR)
-        hcs.status.blast = HCSStatuses.failed
-
-        raise ex
+    hcs = HCSDBModel.objects.get(id=hcs_id)
+    result = BlastCliWrapper(tax_ids_exclude=[taxonomy_id]).run_blast(hcs.sequence)  # type: BlastResults
 
     blast_model_entries = list()
-
     for hit in result.BlastOutput2[0].report.results.search.hits:
         for desc in hit.description:
             sciname = desc.sciname
             strain = None
 
-            if not sciname.isalnum():  # Strain name is included in scientific name
+            if sciname and not sciname.isalnum():  # Strain name is included in scientific name
                 parentheses_start = sciname.find("(") + 1
                 parentheses_end = sciname.find(")", len(sciname) - 1)
 
@@ -65,18 +41,26 @@ def blast_task(hcs_id: str):
 
             blast_model_entries.append(
                 BlastDBModel(
-                    accession=desc.accession, species=desc.sciname, strain=strain, taxid=desc.taxid, title=desc.title
+                    accession=desc.accession, species=sciname, strain=strain, taxid=desc.taxid, title=desc.title
                 )
             )
 
     results_model = HCSResultsDBModel(blast=blast_model_entries)
 
-    # We update the log to indicate that we are done
-    hcs_qs.update_log(LoggerContexts.blast, LoggerFlags.info, LoggerMessages.BLAST_COMPLETED)
-
-    # We update the status to indicate this HCS has gone through Blast analysis successfully
-    hcs.status.blast = HCSStatuses.completed
-
-    # We then save it to the hcs instance
     hcs.results = results_model
     hcs.save()
+
+
+@app.task(name='Blast')
+def blast_task(job_id: str):
+    job = JobDBModel.objects.get(id=job_id)
+    JobDBModel.objects.update_log(job_id, LoggerContexts.blast, LoggerFlags.info, LoggerMessages.BLAST_STARTING)
+
+    for hcs in job.hcs:
+        try:
+            blast_hcs(hcs.id, job.taxonomy_id)
+        except BlastException as ex:
+            JobDBModel.objects.update_log(job_id, LoggerContexts.blast, LoggerFlags.error, LoggerMessages.BLAST_ERROR)
+            raise ex
+
+    JobDBModel.objects.update_log(job_id, LoggerContexts.blast, LoggerFlags.info, LoggerMessages.BLAST_COMPLETED)

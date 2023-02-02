@@ -38,7 +38,8 @@ def get_job_status(job_id: str) -> HCSStatuses:
     """
 
     try:
-        return JobDBModel.objects.get(id=job_id).status
+        job_status = JobDBModel.objects.get(id=job_id).status.value
+        return HCSStatuses[job_status]
     except DoesNotExist:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job not found, consider creating one.")
 

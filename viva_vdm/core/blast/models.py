@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -20,8 +20,8 @@ class DescriptionItem(BaseModel):
     id: str
     accession: str
     title: str
-    taxid: int
-    sciname: str
+    taxid: Optional[int] = None
+    sciname: Optional[str] = None
 
 
 class Hsp(BaseModel):

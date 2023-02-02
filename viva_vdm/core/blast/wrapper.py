@@ -97,7 +97,9 @@ class BlastCliWrapper(object):
         if self.outfmt != OutputFormats.JSON:
             raise NotImplementedException(self.outfmt.name)
 
-        return BlastResults(**json.loads(process.stdout))
+        res = process.stdout
+
+        return BlastResults(**json.loads(res))
 
     def _get_blast_args(self) -> list:
         """

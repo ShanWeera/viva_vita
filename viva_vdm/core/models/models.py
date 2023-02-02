@@ -33,6 +33,8 @@ connect(
 
 
 class LoggerMessages(Enum):
+    JOB_STARTING = 'Job is starting'
+
     PROSITE_STARTING = 'Prosite analysis is starting.'
     PROSITE_RUNNING = 'Prosite analysis is running.'
     PROSITE_ERROR = 'Prosite analysis failed.'
@@ -53,12 +55,15 @@ class LoggerMessages(Enum):
     MHCII_ERROR = 'MHCII prediction failed.'
     MHCII_COMPLETED = 'MHCII prediction completed.'
 
+    JOB_COMPLETED = 'Job is complete'
+
 
 class LoggerContexts(Enum):
     blast: str = 'blast'
     prosite: str = 'prosite'
     mhci: str = 'mhci'
     mhcii: str = 'mhcii'
+    general: str = 'general'
 
 
 class MHCIPredictionMethods(Enum):
@@ -80,14 +85,6 @@ class LoggerFlags(Enum):
     warning: str = 'warning'
 
 
-class HCSStatuses(Enum):
-    pending: str = 'pending'
-    start: str = 'start'
-    running: str = 'running'
-    completed: str = 'completed'
-    failed: str = 'failed'
-
-
 class JobStatuses(Enum):
     pending: str = 'pending'
     starting: str = 'starting'
@@ -97,40 +94,24 @@ class JobStatuses(Enum):
 
 
 class LoggerQuerySet(QuerySet):
-    def update_log(self, context: LoggerContexts, flag: LoggerFlags, msg: LoggerMessages):
-        entry = LogEntryDBModel(flag=flag, message=msg)
-        hcs = self.get()
+    def update_log(self, pk: str, context: LoggerContexts, flag: LoggerFlags, msg: LoggerMessages):
+        entry = LogEntryDBModel(flag=flag, message=msg, context=context)
+        job = self.get(id=pk)
 
-        if context == LoggerContexts.blast:
-            hcs.logs.blast.append(entry)
-        elif context == LoggerContexts.prosite:
-            hcs.logs.prosite.append(entry)
+        job.logs.append(entry)
+        job.save()
 
-        hcs.logs.save()
-        hcs.save()
+        return job
 
 
 class LogEntryDBModel(EmbeddedDocument):
     id = UUIDField(required=True, default=uuid4, binary=False, db_field='id')
     flag = EnumField(LoggerFlags, required=True)
+    context = EnumField(LoggerContexts, required=True)
     timestamp = DateTimeField(required=True, default=datetime.now)
     message = EnumField(LoggerMessages, required=True)
 
-
-class LogsDBModel(Document):
-    prosite = EmbeddedDocumentListField(LogEntryDBModel, required=False)
-    blast = EmbeddedDocumentListField(LogEntryDBModel, required=False)
-    mhci = EmbeddedDocumentListField(LogEntryDBModel, required=False)
-    mhcii = EmbeddedDocumentListField(LogEntryDBModel, required=False)
-
     meta = {'collection': 'logs'}
-
-
-class StepStatusesDBModel(EmbeddedDocument):
-    prosite = EnumField(HCSStatuses, default=HCSStatuses.pending)
-    blast = EnumField(HCSStatuses, default=HCSStatuses.pending)
-    mhci = EnumField(HCSStatuses, default=HCSStatuses.pending)
-    mhcii = EnumField(HCSStatuses, default=HCSStatuses.pending)
 
 
 class PrositeDBModel(EmbeddedDocument):
@@ -142,9 +123,9 @@ class PrositeDBModel(EmbeddedDocument):
 
 class BlastDBModel(EmbeddedDocument):
     accession = StringField(required=True, max_length=12)
-    species = StringField(required=True)
-    strain = StringField(required=True, null=True)
-    taxid = IntField(required=True)
+    species = StringField(null=True, default=None)
+    strain = StringField(null=True, default=None)
+    taxid = IntField(null=True, default=None)
     title = StringField(required=True)
 
 
@@ -187,12 +168,8 @@ class HCSDBModel(Document):
     incidence = FloatField(required=True)
     position = IntField(required=True)
     results = EmbeddedDocumentField(HCSResultsDBModel, required=True, default=HCSResultsDBModel())
-    status = EmbeddedDocumentField(StepStatusesDBModel, required=True, default=StepStatusesDBModel())
-    logs = FollowReferenceField(LogsDBModel, required=False, default=LogsDBModel().save())
-    mhci_prediction_method = EnumField(MHCIPredictionMethods, default=MHCIPredictionMethods.NETMHCPAN)
-    mhcii_prediction_method = EnumField(MHCIIPredictionMethods, default=MHCIIPredictionMethods.NETMHCIIPAN)
 
-    meta = {'queryset_class': LoggerQuerySet, 'collection': 'hcs'}
+    meta = {'collection': 'hcs'}
 
 
 class JobDBModel(Document):
@@ -200,6 +177,9 @@ class JobDBModel(Document):
     taxonomy_id = IntField(required=True)
     protein_name = StringField(required=True)
     hcs = ListField(FollowReferenceField(HCSDBModel), required=True)
-    status = EnumField(JobStatuses, default=JobStatuses.pending)
+    status = EnumField(JobStatuses, default=JobStatuses.starting)
+    logs = EmbeddedDocumentListField(LogEntryDBModel, default=[])
+    mhci_prediction_method = EnumField(MHCIPredictionMethods, default=MHCIPredictionMethods.NETMHCPAN)
+    mhcii_prediction_method = EnumField(MHCIIPredictionMethods, default=MHCIIPredictionMethods.NETMHCIIPAN)
 
-    meta = {'collection': 'job'}
+    meta = {'collection': 'job', 'queryset_class': LoggerQuerySet}

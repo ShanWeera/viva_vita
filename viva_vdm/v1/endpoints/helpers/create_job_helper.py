@@ -1,7 +1,9 @@
-from viva_vdm.core.models.models import JobStatuses
+from celery import chord
+
+from viva_vdm.core.tasks.complete_job import complete_job
 from viva_vdm.core.tasks.iedb_mhcii import mhcii_task
 from viva_vdm.v1.models import CreateJobRequest
-from viva_vdm.core.models import JobDBModel, HCSDBModel
+from viva_vdm.core.models import JobDBModel, HCSDBModel, LoggerContexts, LoggerFlags, LoggerMessages
 
 from viva_vdm.core.tasks import blast_task, prosite_task, mhci_task
 
@@ -18,31 +20,29 @@ class CreateJobHelper(object):
         return JobDBModel(hcs=hcs_instances, **payload_dict).save()
 
     def process_hcs_blast(self):
-        for hcs in self.job_instance.hcs:
-            blast_task(hcs.id)
+        blast_task.delay(str(self.job_instance.id))
 
     def process_hcs_prosite(self):
-        for hcs in self.job_instance.hcs:
-            prosite_task(hcs.id)
+        prosite_task.delay(str(self.job_instance.id))
 
     def process_hcs_mhci(self):
-        for hcs in self.job_instance.hcs:
-            mhci_task(hcs.id)
+        mhci_task.delay(str(self.job_instance.id))
 
     def process_hcs_mhcii(self):
-        for hcs in self.job_instance.hcs:
-            mhcii_task(hcs.id)
-
-    def _update_job_status(self):
-        self.job_instance.status = JobStatuses.starting
-        self.job_instance.save()
+        mhcii_task.delay(str(self.job_instance.id))
 
     def process(self) -> str:
-        self._update_job_status()
+        JobDBModel.objects.update_log(
+            str(self.job_instance.id), LoggerContexts.general, LoggerFlags.info, LoggerMessages.JOB_STARTING
+        )
 
-        self.process_hcs_blast()
-        self.process_hcs_prosite()
-        self.process_hcs_mhci()
-        self.process_hcs_mhcii()
+        tasks = (
+            blast_task.s(str(self.job_instance.id)),
+            prosite_task.s(str(self.job_instance.id)),
+            mhci_task.s(str(self.job_instance.id)),
+            mhcii_task.s(str(self.job_instance.id)),
+        )
+
+        chord(tasks)(complete_job.s())
 
         return self.job_instance.id
