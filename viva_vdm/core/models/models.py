@@ -1,5 +1,7 @@
+from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
+from typing import Optional
 from uuid import uuid4
 
 from mongoengine import (
@@ -33,7 +35,8 @@ connect(
 
 
 class LoggerMessages(Enum):
-    JOB_STARTING = 'Job is starting'
+    JOB_RUNNING = 'Job is running'
+    JOB_ERROR = 'Job failed'
 
     PROSITE_STARTING = 'Prosite analysis is starting.'
     PROSITE_RUNNING = 'Prosite analysis is running.'
@@ -66,6 +69,40 @@ class LoggerContexts(Enum):
     general: str = 'general'
 
 
+@dataclass
+class LoggerMessageMap:
+    running = {
+        LoggerContexts.prosite: LoggerMessages.PROSITE_RUNNING,
+        LoggerContexts.blast: LoggerMessages.BLAST_RUNNING,
+        LoggerContexts.mhci: LoggerMessages.MHCI_RUNNING,
+        LoggerContexts.mhcii: LoggerMessages.MHCII_RUNNING,
+        LoggerContexts.general: LoggerMessages.JOB_RUNNING,
+    }
+
+    starting = {
+        LoggerContexts.prosite: LoggerMessages.PROSITE_STARTING,
+        LoggerContexts.blast: LoggerMessages.BLAST_STARTING,
+        LoggerContexts.mhci: LoggerMessages.MHCI_STARTING,
+        LoggerContexts.mhcii: LoggerMessages.MHCII_STARTING,
+    }
+
+    error = {
+        LoggerContexts.prosite: LoggerMessages.PROSITE_ERROR,
+        LoggerContexts.blast: LoggerMessages.BLAST_ERROR,
+        LoggerContexts.mhci: LoggerMessages.MHCI_ERROR,
+        LoggerContexts.mhcii: LoggerMessages.MHCII_ERROR,
+        LoggerContexts.general: LoggerMessages.JOB_ERROR,
+    }
+
+    completed = {
+        LoggerContexts.prosite: LoggerMessages.PROSITE_COMPLETED,
+        LoggerContexts.blast: LoggerMessages.BLAST_COMPLETED,
+        LoggerContexts.mhci: LoggerMessages.MHCI_COMPLETED,
+        LoggerContexts.mhcii: LoggerMessages.MHCII_COMPLETED,
+        LoggerContexts.general: LoggerMessages.JOB_COMPLETED,
+    }
+
+
 class MHCIPredictionMethods(Enum):
     NETMHCPAN_EL: str = "netmhcpan_el"
     NETMHCPAN: str = "netmhcpan"
@@ -88,20 +125,45 @@ class LoggerFlags(Enum):
 class JobStatuses(Enum):
     pending: str = 'pending'
     starting: str = 'starting'
+    started: str = 'started'
     partial: str = 'partial'
     completed: str = 'completed'
     error: str = 'failed'
 
 
+class JobDBModel:
+    ...
+
+
 class LoggerQuerySet(QuerySet):
-    def update_log(self, pk: str, context: LoggerContexts, flag: LoggerFlags, msg: LoggerMessages):
+    def update_log(
+        self,
+        *,
+        context: LoggerContexts,
+        flag: LoggerFlags,
+        msg: LoggerMessages,
+        instance: Optional[JobDBModel] = None,
+        pk: Optional[str] = None,
+    ):
+        if not instance and not pk:
+            raise ValueError('Either an instance, or a pk needed')
+
         entry = LogEntryDBModel(flag=flag, message=msg, context=context)
-        job = self.get(id=pk)
+        job = instance or self.get(id=pk)
 
         job.logs.append(entry)
         job.save()
 
         return job
+
+    def update_status(self, *, status: JobStatuses, instance: Optional[JobDBModel] = None, pk: Optional[str] = None):
+        if not instance and not pk:
+            raise ValueError('Either an instance, or a pk needed')
+
+        job = instance or self.get(id=pk)
+
+        job.status = status
+        job.save()
 
 
 class LogEntryDBModel(EmbeddedDocument):
@@ -177,7 +239,7 @@ class JobDBModel(Document):
     taxonomy_id = IntField(required=True)
     protein_name = StringField(required=True)
     hcs = ListField(FollowReferenceField(HCSDBModel), required=True)
-    status = EnumField(JobStatuses, default=JobStatuses.starting)
+    status = EnumField(JobStatuses, default=JobStatuses.pending)
     logs = EmbeddedDocumentListField(LogEntryDBModel, default=[])
     mhci_prediction_method = EnumField(MHCIPredictionMethods, default=MHCIPredictionMethods.NETMHCPAN)
     mhcii_prediction_method = EnumField(MHCIIPredictionMethods, default=MHCIIPredictionMethods.NETMHCIIPAN)

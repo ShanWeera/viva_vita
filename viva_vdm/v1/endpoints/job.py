@@ -20,7 +20,7 @@ def create_job(payload: CreateJobRequest) -> str:
     an HTTP 500 status code with the body indicating the missing fields.
     """
 
-    job_id = CreateJobHelper(payload).process()
+    job_id = CreateJobHelper(payload).create_and_process()
 
     return job_id
 
