@@ -1,8 +1,15 @@
+from datetime import datetime
 from typing import List
 
 from pydantic import BaseModel, Field
 
-from viva_vdm.core.models import MHCIPredictionMethods, MHCIIPredictionMethods
+from viva_vdm.core.models import (
+    MHCIPredictionMethods,
+    MHCIIPredictionMethods,
+    LoggerFlags,
+    LoggerContexts,
+    LoggerMessages,
+)
 
 
 class HCSApiModel(BaseModel):
@@ -13,6 +20,14 @@ class HCSApiModel(BaseModel):
 
 class JobHCSListModel(HCSApiModel):
     id: str = Field(..., title='Automatically generated ID for the HCS', alias='_id')
+
+
+class JobLogApiModel(BaseModel):
+    id: str = Field(..., title='The ID of the log entry')
+    flag: LoggerFlags = Field(..., title='The severity of the log entry')
+    context: LoggerContexts = Field(..., title='The context of the log entry')
+    timestamp: datetime = Field(..., title='When the log entry was created')
+    message: LoggerMessages = Field(..., title='The main content of the log entry')
 
 
 class CreateJobRequest(BaseModel):

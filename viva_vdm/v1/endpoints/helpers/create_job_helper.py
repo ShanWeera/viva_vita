@@ -1,11 +1,19 @@
+from viva_vdm.core.models.models import LoggerMessageMap
 from viva_vdm.core.tasks.job import vita_job
 from viva_vdm.v1.models import CreateJobRequest
-from viva_vdm.core.models import JobDBModel, HCSDBModel
+from viva_vdm.core.models import JobDBModel, HCSDBModel, LoggerContexts, LoggerFlags
 
 
 class CreateJobHelper(object):
     def __init__(self, payload: CreateJobRequest):
         self.job_instance = self._create_db_entry(payload)
+
+        JobDBModel.objects.update_log(
+            instance=self.job_instance,
+            context=LoggerContexts.general,
+            flag=LoggerFlags.info,
+            msg=LoggerMessageMap.pending[LoggerContexts.general],
+        )
 
     @classmethod
     def _create_db_entry(cls, payload: CreateJobRequest) -> JobDBModel:

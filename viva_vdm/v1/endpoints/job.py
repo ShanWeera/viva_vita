@@ -7,6 +7,7 @@ from viva_vdm.core.models import JobDBModel
 from viva_vdm.core.models.models import JobStatuses
 from viva_vdm.v1.models import CreateJobRequest, JobHCSListModel
 from viva_vdm.v1.endpoints.helpers import CreateJobHelper
+from viva_vdm.v1.models.job import JobLogApiModel
 
 router = APIRouter(prefix='/job', tags=['job'])
 
@@ -63,4 +64,32 @@ def get_job_hcs(job_id: str) -> List[JobHCSListModel]:
     except DoesNotExist:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job not found, consider creating one.")
 
-    return [JobHCSListModel(**hcs.to_mongo().to_dict()) for hcs in job.hcs]
+    hcs_dicts = list()
+    for hcs in job.hcs:
+        hcs_dicts.append(
+            {
+                **hcs.to_mongo().to_dict(),
+                '_id': str(hcs.id),
+            }
+        )
+
+    return hcs_dicts
+
+
+@router.get(
+    '/{job_id}/log',
+    status_code=status.HTTP_200_OK,
+    response_description="Returns a list of log entries for this job",
+    response_model=List[JobLogApiModel],
+)
+def get_job_log(job_id: str) -> List[JobLogApiModel]:
+    """
+    Get a list of HCS for the job ID
+
+    If the provided job id is not found an HTTP 404 status is returned. A successful request will return an HTTP 200.
+    """
+
+    try:
+        return [entry.to_mongo().to_dict() for entry in JobDBModel.objects.get(id=job_id).logs]
+    except DoesNotExist:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job not found, consider creating one.")

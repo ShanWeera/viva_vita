@@ -35,6 +35,8 @@ connect(
 
 
 class LoggerMessages(Enum):
+    JOB_PENDING = 'Job has been created'
+
     JOB_RUNNING = 'Job is running'
     JOB_ERROR = 'Job failed'
 
@@ -71,6 +73,10 @@ class LoggerContexts(Enum):
 
 @dataclass
 class LoggerMessageMap:
+    pending = {
+        LoggerContexts.general: LoggerMessages.JOB_PENDING,
+    }
+
     running = {
         LoggerContexts.prosite: LoggerMessages.PROSITE_RUNNING,
         LoggerContexts.blast: LoggerMessages.BLAST_RUNNING,
