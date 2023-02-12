@@ -9,7 +9,6 @@ from viva_vdm.core.models import (
     JobDBModel,
     HCSDBModel,
     BlastDBModel,
-    HCSResultsDBModel,
     PrositeDBModel,
     MHCIPredictionMethods,
 )
@@ -75,9 +74,7 @@ class VitaWorkflow(object):
                     )
                 )
 
-        results_model = HCSResultsDBModel(blast=blast_model_entries)
-
-        hcs.results = results_model
+        hcs.results.blast = blast_model_entries
         hcs.save()
 
     @handle_feedback(context=LoggerContexts.prosite)
