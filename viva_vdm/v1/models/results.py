@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 
 
 class EpitopeApiModel(BaseModel):
+    allele: str = Field(..., title='The allele that the epitope was predicted for')
     sequence: str = Field(..., title='The sequence of the epitope')
     percentile: float = Field(..., title='The percentile of the epitope')
 

@@ -54,7 +54,7 @@ class VitaWorkflow(object):
 
     @handle_feedback(context=LoggerContexts.blast)
     def _run_blast_for_hcs(self, hcs: HCSDBModel, taxonomy_id: int):
-        result = BlastCliWrapper(tax_ids_exclude=[taxonomy_id]).run_blast(hcs.sequence)  # type: BlastResults
+        result = BlastCliWrapper(exclude_taxid=taxonomy_id, hcs=hcs.sequence, database='VNR').run_blast()  # type: BlastResults
 
         blast_model_entries = list()
         for hit in result.BlastOutput2[0].report.results.search.hits:
@@ -119,9 +119,9 @@ class VitaWorkflow(object):
         self._convey_job_start()
 
         for hcs in self.job_instance.hcs:
-            self._run_prosite_for_hcs(hcs)
-            self._run_mhci_for_hcs(hcs, self.job_instance.mhci_prediction_method)
-            self._run_mhcii_for_hcs(hcs, self.job_instance.mhcii_prediction_method)
+            # self._run_prosite_for_hcs(hcs)
+            # self._run_mhci_for_hcs(hcs, self.job_instance.mhci_prediction_method)
+            # self._run_mhcii_for_hcs(hcs, self.job_instance.mhcii_prediction_method)
             self._run_blast_for_hcs(hcs, self.job_instance.taxonomy_id)
 
         self._convey_job_end()
