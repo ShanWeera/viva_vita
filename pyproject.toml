@@ -17,6 +17,7 @@ backoff = "^1.11.1"
 biopython = "^1.79"
 mongoengine-goodjson = "^1.1.8"
 mhcflurry = "^2.0.2"
+fastapi-cache2 = "^0.2.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.5"
@@ -24,6 +25,8 @@ pre-commit = "^2.14.1"
 
 [tool.poetry.scripts]
 setup = 'setup:main'
+worker = 'viva_vdm.core.celery_app:main'
+server = 'wsgi:main'
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

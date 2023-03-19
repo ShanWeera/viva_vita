@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 from os.path import join
@@ -33,12 +34,13 @@ class MhcIISupertypes(Enum):
     DQ = get_alleles("DQ")
 
 
-class PredictionMethods(Enum):
+@dataclass
+class PredictionMethods:
     # CONSENSUS = "consensus" doesn't work
-    NETMHCIIPAN = "NetMHCIIpan"  # works for all alleles of all supertypes
-    # NNALIGN = "nn_align-2.3" no results
-    # SMMALIGN = "smm_align" doesn't work
-    # TEPITOPE = "tepitope" doesn't support all the alleles in the supertypes
-    # COMBLIB = "comblib" doesn't do all the alleles in the supertypes
-    NETMHCPAN_EL = "netmhciipan_el"  # works for all alleles of all supertypes
-    NETMHCPAN_BA = "netmhciipan_ba"  # works for all alleles of all supertypes
+    NETMHCIIPAN: str = "NetMHCIIpan"  # works for all alleles of all supertypes
+    # NNALIGN: str = "nn_align-2.3" no results
+    # SMMALIGN: str = "smm_align" doesn't work
+    # TEPITOPE: str = "tepitope" doesn't support all the alleles in the supertypes
+    # COMBLIB: str = "comblib" doesn't do all the alleles in the supertypes
+    NETMHCPAN_EL: str = "netmhciipan_el"  # works for all alleles of all supertypes
+    NETMHCPAN_BA: str = "netmhciipan_ba"  # works for all alleles of all supertypes

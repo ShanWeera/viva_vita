@@ -2,8 +2,8 @@ from .constants import OutputFormats
 
 
 class BlastException(Exception):
-    def __init__(self, sequence: str, arguments: list, stderr: str):
-        msg = f"Blast failed for sequence {sequence} with arguments {', '.join(arguments)}.\nThe error was: \n{stderr}"
+    def __init__(self, job_id: str):
+        msg = f'Error in Blast job {job_id}'
 
         super(BlastException, self).__init__(msg)
 

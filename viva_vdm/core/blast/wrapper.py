@@ -1,190 +1,76 @@
+import asyncio
 import json
-from os import environ
-from subprocess import run, PIPE
-from typing import List
+import time
+from typing import List, Optional, Literal
 
-from .constants import Databases, OutputFormats, Matrices
-from .exceptions import BlastException, NotImplementedException
+import requests
+
+from .exceptions import BlastException
 from ..settings import AppConfig
 from .models import BlastResults
 
 app_config = AppConfig()
+BVU_BLAST_BASE_URL = 'https://blast.bezmialem.edu.tr'
 
 
 class BlastCliWrapper(object):
-    def __init__(
-        self,
-        database: Databases = Databases.NON_REDUNDANT,
-        matrix: Matrices = Matrices.PAM30,
-        evalue: float = 0.05,
-        outfmt: OutputFormats = OutputFormats.JSON,
-        remote: bool = True,
-        tax_ids_exclude: list = None,
-        tax_ids_include: list = None,
-        max_target_seqs: int = 10,
-    ):
+    bvu_blast_url = f'{BVU_BLAST_BASE_URL}/job/create'
+    bvu_blast_status_url = f'{BVU_BLAST_BASE_URL}/job/status/'
+    bvu_blast_results_url = f'{BVU_BLAST_BASE_URL}/static/'
 
-        """
-        A wrapper for the BLAST+ cli tool.
-
-        :param database: The code of the database to query against.
-        :param matrix: The matrix to use.
-        :param evalue: Expect value (E) for saving hits.
-        :param outfmt: The output format of results.
-        :param remote: To use local database, or public NCBI database.
-        :param tax_ids_exclude: List of taxonomy ids to exclude in the search.
-        :param tax_ids_include: List of taxonomy ids to include in the search.
-        :param max_target_seqs: Number of aligned sequences to keep.
-
-        :type database: Databases
-        :type matrix: Matrices
-        :type evalue: float
-        :type outfmt: OutputFormats
-        :type remote: bool
-        :type tax_ids_exclude: list
-        :type tax_ids_include: list
-        :type max_target_seqs: int
-
-        Example:
-        >>> from viva_vdm.core.blast import BlastCliWrapper
-        >>> results = BlastCliWrapper().run_blast('SSVSSFERFEIFPKESSWPNHNTNGVTAACSHEGKSSFYRNLLWLTEKE')
-        """
-
-        if tax_ids_exclude is None:
-            tax_ids_exclude = []
-
-        if tax_ids_include is None:
-            tax_ids_include = []
-
+    def __init__(self, *, hcs: str, database: Literal['VNR', 'HumanNR', 'pdbaa'], exclude_taxid: Optional[int] = None):
+        self.hcs = hcs
+        self.exclude_taxid = exclude_taxid
         self.database = database
-        self.matrix = matrix
-        self.evalue = evalue
-        self.outfmt = outfmt
-        self.remote = remote
-        self.tax_ids_exclude = tax_ids_exclude
-        self.max_target_seqs = max_target_seqs
-        self.tax_ids_include = tax_ids_include
 
-    def run_blast(self, sequence: str) -> BlastResults:
-        """
-        Run BLAST with the provided parameters as class initiation.
+        self.job_ids = list()
 
-        :param sequence: The sequence to perform BLAST with.
-        :type sequence: str
+    def _make_blast_post_request(self, hcs: str) -> str:
+        data = dict(sequence=hcs, db=self.database)
 
-        :return: Returns the BLAST results in the output format provided at initiation.
-        """
+        if self.exclude_taxid:
+            data['exclude_taxid'] = self.exclude_taxid
 
-        arguments = self._get_blast_args()
-
-        # Without the system environment vars blast's connection to NCBI fails. Not really sure why but adding this
-        # helps
-        current_envars = environ.copy()
-
-        process = run(
-            arguments,
-            stdout=PIPE,
-            stderr=PIPE,
-            encoding='ascii',
-            input=sequence,
-            env={**current_envars, 'BLASTDB': app_config.blastdb_path},
+        req = requests.post(
+            url=self.bvu_blast_url,
+            json=data,
+            verify=False
         )
 
-        if process.returncode != 0:
-            raise BlastException(sequence, arguments, process.stderr)
+        req.raise_for_status()
 
-        if self.outfmt != OutputFormats.JSON:
-            raise NotImplementedException(self.outfmt.name)
+        return req.content.decode('utf-8').strip('"')
 
-        return BlastResults(**json.loads(process.stdout))
+    def _get_blast_results(self, job_id: str) -> BlastResults:
+        complete = False
 
-    def _get_blast_args(self) -> list:
-        """
-        Get the arguments for subprocess based on the provided parameters.
+        while not complete:
+            req = requests.get(url=f'{self.bvu_blast_status_url}{job_id}', verify=False)
+            req.raise_for_status()
 
-        :return: A list of parameters.
-        """
+            status = req.content.decode('utf-8')
+            status = int(status)
 
-        settings = AppConfig()
-
-        args = [
-            settings.blast_exe_path,
-            '-db',
-            self.database.value,
-            '-matrix',
-            self.matrix.value,
-            '-evalue',
-            str(self.evalue),
-            '-outfmt',
-            str(self.outfmt.value),
-            '-remote' if self.remote else None,
-            '-max_target_seqs',
-            str(self.max_target_seqs),
-        ]
-
-        filter_args = self._get_tax_filter_args()
-
-        if filter_args:
-            args = args + filter_args
-
-        args = [arg for arg in args if arg]
-
-        return args
-
-    def _get_tax_filter_args(self) -> List[str]:
-        """
-        A common method to generate the taxonomy filtering parameters.
-
-        :return: A list containing the appropriate taxonomy filtering parameters.
-        """
-
-        if self.tax_ids_include or self.tax_ids_exclude:
-            if self.remote:
-                return self._get_entrez_query()
+            if status == 3:
+                complete = True
+            elif status == 2:
+                raise BlastException(job_id)
             else:
-                return self._get_taxid_arguments()
+                time.sleep(10)
+                continue
 
-    def _get_taxid_arguments(self) -> List[str]:
-        """
-        Generates a list of arguments for including and excluding given taxonomy ids.
+        results_request = requests.get(
+            url=f'{self.bvu_blast_results_url}{job_id}.json',
+            verify=False
+        )
 
-        :return: A list of arguments.
-        """
+        results_request.raise_for_status()
+        results_string = results_request.content.decode('utf-8')
 
-        args = []
+        return BlastResults(**json.loads(results_string))
 
-        if self.tax_ids_include:
-            args.append('-taxids')
-            args.append(','.join(str(tax_id) for tax_id in self.tax_ids_include))
+    def run_blast(self):
+        job_id = self._make_blast_post_request(hcs=self.hcs)
+        results = self._get_blast_results(job_id)
 
-        if self.tax_ids_exclude:
-            args.append('-negative_taxids')
-            args.append(','.join(str(tax_id) for tax_id in self.tax_ids_exclude))
-
-        return args
-
-    def _get_entrez_query(self) -> List[str]:
-        """
-        Generates entrez query with the given filtering criteria.
-
-        :return: A list containing the flag and query string for entrez.
-        """
-
-        if self.remote:
-            # In remote mode we cannot use *-taxids, we have to use entrez queries.
-            entrez_query = str()
-            args = ['-entrez_query']
-
-            if self.tax_ids_include:
-                for count, idx in enumerate(self.tax_ids_include, 1):
-                    entrez_query += f'(txid{idx} [ORGN]){" AND " if count != len(self.tax_ids_include) else " "}'
-            else:
-                entrez_query += 'all [filter] '
-
-            if self.tax_ids_exclude:
-                for count, idx in enumerate(self.tax_ids_exclude, 1):
-                    entrez_query += f'NOT (txid{idx} [ORGN]){" AND " if count != len(self.tax_ids_exclude) else ""}'
-
-            args.append(f'{entrez_query}')
-
-            return args
+        return results

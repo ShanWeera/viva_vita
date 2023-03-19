@@ -1,5 +1,5 @@
 from celery import Celery
-from .settings import ResourceConfig
+from viva_vdm.core.settings import ResourceConfig
 
 settings = ResourceConfig()
 
