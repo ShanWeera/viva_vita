@@ -14,12 +14,13 @@ import dotenv
 from pymongo import MongoClient
 from pymongo.errors import ServerSelectionTimeoutError, OperationFailure, CollectionInvalid
 
-from viva_vdm.core.settings import ResourceConfig
+from viva_vdm.core.settings import ResourceConfig, AppConfig
 
 
 class Setup(object):
     def __init__(self):
         self.settings = ResourceConfig()
+        self.app_settings = AppConfig()
         self._con_retries = 0
 
         self.client = MongoClient(
@@ -30,10 +31,43 @@ class Setup(object):
         )
 
     def run(self):
-        self._check_if_connected()
-        self._create_db()
-        self._create_user()
-        self._download_prosite()
+        self._download_iedb_mhci_pred_tools()
+
+    def _download_iedb_mhci_pred_tools(self):
+        version = self.app_settings.iedb_mhci_version
+        download_url = f'https://downloads.iedb.org/tools/mhci/{version}/IEDB_MHC_I-{version}.tar.gz'
+
+        print(f'Downloading IEDB MHCI tools version: {version}')
+
+        iedb_mhci_directory = self._create_resource_directory('iedb_mhci')
+        archive_path = os.path.join(iedb_mhci_directory, 'mhci.tar.gz')
+        extract_path = os.path.join(iedb_mhci_directory, 'mhci')
+
+        urllib.request.urlretrieve(download_url, archive_path)
+
+        print('Download completed..Extracting..')
+
+        self._extract_tar(archive_path, extract_path)
+
+        print('Extracting completed!. Cleaning up..')
+
+        actual_path = os.path.join(extract_path, 'mhc_i')
+        shutil.move(actual_path, iedb_mhci_directory)
+
+        os.remove(archive_path)
+        shutil.rmtree(extract_path)
+
+    def _download_iedb_mhcii_pred_tools(self):
+        version = self.app_settings.iedb_mhcii_version
+        download_url = f'https://downloads.iedb.org/tools/mhcii/{version}/IEDB_MHC_II-{version}.tar.gz'
+
+        iedb_mhci_directory = self._create_resource_directory('iedb_mhcii')
+        archive_path = os.path.join(iedb_mhci_directory, 'mhcii.tar.gz')
+        extract_path = os.path.join(iedb_mhci_directory, 'mhcii')
+
+        urllib.request.urlretrieve(download_url, archive_path)
+
+        self._extract_tar(archive_path, extract_path)
 
     def _check_if_connected(self):
         try:
@@ -49,6 +83,15 @@ class Setup(object):
             print(f'Retrying Database Connection x{self._con_retries}/10')
 
             self._check_if_connected()
+
+    def _create_resource_directory(self, resource: str):
+        cwd = os.getcwd()
+
+        directory = os.path.join(cwd, *('_resources', resource))
+
+        self._create_directory(directory)
+
+        return directory
 
     def _create_db(self):
         dbs = self.client.list_database_names()
@@ -86,7 +129,8 @@ class Setup(object):
 
     def _download_prosite(self):
         print("Creating Prosite directory..")
-        prosite_dir = self._create_prosite_dir()
+
+        prosite_dir = self._create_resource_directory('prosite')
         prosite_db = os.path.join(prosite_dir, 'prosite.dat')
 
         dotenv_file = dotenv.find_dotenv()
@@ -134,16 +178,11 @@ class Setup(object):
         tar.close()
 
     @classmethod
-    def _create_prosite_dir(cls) -> str:
-        cwd = os.getcwd()
-        prosite_dir = os.path.join(cwd, 'prosite')
+    def _create_directory(cls, directory: str) -> str:
+        if os.path.exists(directory):
+            shutil.rmtree(directory)
 
-        if os.path.exists(prosite_dir):
-            shutil.rmtree(prosite_dir)
-
-        os.mkdir(prosite_dir)
-
-        return prosite_dir
+        os.makedirs(directory)
 
 
 def main():
