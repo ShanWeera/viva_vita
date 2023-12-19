@@ -19,6 +19,7 @@
 
 # Do not include the Prosite directory
 /prosite
+/_resources
 
 # Generated files
 .idea/**/contentModel.xml
