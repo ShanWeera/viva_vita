@@ -43,10 +43,10 @@ class AppConfig(BaseSettings):
     prosite_db_path: str
 
     iedb_mhci_version: str = '3.1.5'
-    iedb_mhci_exe_path: str = None
+    iedb_mhci_install_path: str = None
 
     iedb_mhcii_version: str = '3.1.11'
-    iedb_mhcii_exe_path: str = None
+    iedb_mhcii_install_path: str = None
 
     class Config:
         env_file: str = '.env'
