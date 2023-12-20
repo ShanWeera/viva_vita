@@ -60,3 +60,6 @@ class AppConfig(BaseSettings):
             'iedb_mhci_exe_path': {'env': ['IEDB_MHCI_INSTALL_PATH']},
             'iedb_mhcii_exe_path': {'env': ['IEDB_MHCI_INSTALL_PATH']},
         }
+
+
+# Testing
