@@ -58,7 +58,7 @@ class AppConfig(BaseSettings):
             'prosite_exe_path': {'env': ['PROSITE_INSTALL_PATH']},
             'prosite_db_path': {'env': ['PROSITE_DB_PATH']},
             'iedb_mhci_exe_path': {'env': ['IEDB_MHCI_INSTALL_PATH']},
-            'iedb_mhcii_exe_path': {'env': ['IEDB_MHCI_INSTALL_PATH']},
+            'iedb_mhcii_exe_path': {'env': ['IEDB_MHCII_INSTALL_PATH']},
         }
 
 

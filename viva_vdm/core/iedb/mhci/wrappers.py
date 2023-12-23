@@ -1,11 +1,13 @@
-from viva_vdm.core.iedb.mhci import add_seq_predictor_path  # noqa
+from typing import List, TypedDict
 
-import mhcflurry
-from typing import List
-from seqpredictor import MHCBindingPredictions
-from util import InputData, OneSequenceInput
+from ttp import ttp
+
+from .utils import run_mhci_prediction_process
 from .constants import MhcISupertypes, PredictionMethods
 from .models import MHCIEpitope
+
+
+ErrorType = TypedDict('ErrorType', {'allele': str, 'errors': str})
 
 
 class MHCIPredictorBase(object):
@@ -39,121 +41,121 @@ class MHCIPredictorBase(object):
             >>> results = predictor.predict("MDSNTVSSFQDI")
         """
 
-        self.version = '20130222'
         self.supertype = supertype
         self.length = length
         self.method = method
         self.cutoff = cutoff
 
-    def predict(self, sequence: str):
-        ...
+        self.errors: List[ErrorType] = []
+
+    def get_table_template(self):
+        raise NotImplementedError()
+
+    def predict(self, sequence: str) -> List[MHCIEpitope]:
+        results = list()
+
+        for allele in self.supertype:
+            output, errors = run_mhci_prediction_process(self.method, allele, self.length, sequence)
+
+            if errors:
+                self.errors.append({'allele': allele, 'errors': errors})
+                continue
+
+            _, rows = output.split('\n', 1)
+
+            results_list = self.parse_results_table(rows)
+
+            results.extend((MHCIEpitope(**r) for r in results_list if r['percentile'] > self.cutoff))
+
+        return results
+
+    def parse_results_table(self, results_table: str) -> List[dict]:
+        template = self.get_table_template()
+
+        parser = ttp(data=results_table, template=template)
+        parser.parse()
+
+        parsed_rows = parser.result(structure='flat_list')
+
+        return parsed_rows
 
 
 class MhcINetMhcPan(MHCIPredictorBase):
-    def predict(self, sequence: str) -> List[MHCIEpitope]:
-        """
-        This is the implementation of the prediction method for NetMHCPan.
+    def get_table_template(self):
+        return """
+<group>
+{{ allele }} {{ seq_num | to_int }} {{ start | to_int }} {{ end | to_int }} {{ length | to_int }} {{ sequence }} {{ core }} {{ icore }} {{ ic50 | to_float }} {{ percentile | to_float }} # noqa: E501
+</group>
+"""
 
-        :param sequence: A protein sequences to predict epitopes for.
-        :type sequence: str
 
-        :return: A list of epitopes with IEDB percentile ranking that is equal to, or less than the defined cutoff.
-        """
-
-        results = list()
-        input_protein = OneSequenceInput(sequence)
-
-        for allele in self.supertype.value:
-            input_data = InputData(
-                version=self.version,
-                method=self.method,
-                mhc=allele,
-                hla_seq=None,
-                length=self.length,
-                proteins=input_protein,
-            )
-
-            predictions = MHCBindingPredictions(input_data).predict(input_data.input_protein.as_amino_acid_text())
-
-            if not predictions:
-                continue
-
-            for allele_predictions in predictions:
-                allele = allele_predictions[1]
-                hits = list()
-
-                for allele_prediction in allele_predictions[2][0]:
-                    if not allele_prediction[3] <= self.cutoff:
-                        continue
-
-                    hits.append(
-                        MHCIEpitope(sequence=allele_prediction[0], percentile=allele_prediction[3], allele=allele)
-                    )
-
-                results.extend(hits)
-
-        return results
+class MhcIANN(MHCIPredictorBase):
+    def get_table_template(self):
+        return """
+<group>
+{{ allele }} {{ seq_num | to_int }} {{ start | to_int }} {{ end | to_int }} {{ length | to_int }} {{ sequence }} {{ ic50 | to_float }} {{ percentile | to_float }} # noqa: E501
+</group>
+"""
 
 
 class MhcINetMhcPanEL(MhcINetMhcPan):
-    ...
+    def get_table_template(self):
+        return """
+<group>
+{{ allele }} {{ seq_num | to_int }} {{ start | to_int }} {{ end | to_int }} {{ length | to_int }} {{ sequence }} {{ core }} {{ icore }} {{ score | to_float }} {{ percentile | to_float }} # noqa: E501
+</group>
+"""
 
 
 class MhcIPickpocket(MHCIPredictorBase):
-    def predict(self, sequence: str) -> List[MHCIEpitope]:
-        """
-        This is the implementation of the prediction method for Pickpocket.
-
-        :param sequence: A protein sequences to predict epitopes for.
-        :type sequence: str
-
-        :return: A list of epitopes with IEDB percentile ranking that is equal to, or less than the defined cutoff.
-        """
-
-        results = list()
-        input_protein = OneSequenceInput(sequence)
-
-        for allele in self.supertype.value:
-            input_data = InputData(
-                version=self.version,
-                method=self.method.value,
-                mhc=allele,
-                hla_seq=None,
-                length=self.length,
-                proteins=input_protein,
-            )
-
-            predictions = MHCBindingPredictions(input_data).predict(input_data.input_protein.as_amino_acid_text())
-            predictions = [
-                MHCIEpitope(sequence=sequence[pos : pos + self.length], percentile=hit[1])  # noqa: E203
-                for pos, hit in enumerate(predictions[0][2][0])
-                if hit[1] <= self.cutoff
-            ]
-            results.extend(predictions)
-
-        return results
+    def get_table_template(self):
+        return """
+<group>
+{{ allele }} {{ seq_num | to_int }} {{ start | to_int }} {{ end | to_int }} {{ length | to_int }} {{ sequence }} {{ ic50 | to_float }} {{ percentile | to_float }} # noqa: E501
+</group>
+"""
 
 
-class MhcFlurry(MHCIPredictorBase):
-    def predict(self, sequence: str) -> List[MHCIEpitope]:
-        """
-        This is the implementation of the prediction method for Mhcflurry. This is not part of IEDB.
-        https://github.com/openvax/mhcflurry
+class MhcISMM(MHCIPredictorBase):
+    def get_table_template(self):
+        return """
+<group>
+{{ allele }} {{ seq_num | to_int }} {{ start | to_int }} {{ end | to_int }} {{ length | to_int }} {{ sequence }} {{ ic50 | to_float }} {{ percentile | to_float }} # noqa: E501
+</group>
+"""
 
-        :param sequence: A protein sequences to predict epitopes for.
-        :type sequence: str
 
-        :return: A list of epitopes with IEDB percentile ranking that is equal to, or less than the defined cutoff.
-        """
+class MhcISMMPMBEC(MHCIPredictorBase):
+    def get_table_template(self):
+        return """
+<group>
+{{ allele }} {{ seq_num | to_int }} {{ start | to_int }} {{ end | to_int }} {{ length | to_int }} {{ sequence }} {{ ic50 | to_float }} {{ percentile | to_float }} # noqa: E501
+</group>
+"""
 
-        predictor = mhcflurry.Class1PresentationPredictor.load()
 
-        results = predictor.predict_sequences(
-            sequences=sequence,
-            alleles=self.supertype.value,
-            result="filtered",
-            comparison_quantity="affinity_percentile",
-            filter_value=self.cutoff,
-        ).to_dict(orient="records")
+class MhcIConsensus(MHCIPredictorBase):
+    def get_table_template(self):
+        return """
+<group>
+{{ allele }} {{ seq_num | to_int }} {{ start | to_int }} {{ end | to_int }} {{ length | to_int }} {{ sequence }} {{ percentile | to_float }} {{ ignore }} {{ ignore }} {{ ignore }} {{ ignore }} {{ ignore }} {{ ignore }} # noqa: E501
+</group>
+"""
 
-        return [MHCIEpitope(sequence=hit.get("peptide"), percentile=hit.get("affinity_percentile")) for hit in results]
+
+class MhcINetMhcCons(MHCIPredictorBase):
+    def get_table_template(self):
+        return """
+<group>
+{{ allele }} {{ seq_num | to_int }} {{ start | to_int }} {{ end | to_int }} {{ length | to_int }} {{ sequence }} {{ ic50 | to_float }} {{ percentile | to_float }} # noqa: E501
+</group>
+"""
+
+
+class MhcINetMhcStabPan(MHCIPredictorBase):
+    def get_table_template(self):
+        return """
+<group>
+{{ allele }} {{ seq_num | to_int }} {{ start | to_int }} {{ end | to_int }} {{ length | to_int }} {{ sequence }} {{ ic50 | to_float }} {{ percentile | to_float }} # noqa: E501
+</group>
+"""
