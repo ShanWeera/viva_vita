@@ -2,11 +2,11 @@ from .constants import PredictionMethods, MhcISupertypes
 from viva_vdm.core.iedb.mhci import wrappers
 
 
-class MhcIPredictionFactory(wrappers.MHCIPredictorBase):
+class MhcIPredictionFactory:
     def __new__(
         cls,
         *,
-        supertype: MhcISupertypes,
+        alleles: MhcISupertypes,
         method: PredictionMethods = PredictionMethods.NETMHCPAN,
         length: int = 9,
         cutoff: float = 1.00,
