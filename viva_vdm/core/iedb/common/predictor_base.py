@@ -38,22 +38,23 @@ class PredictorBase(ABC):
         raise NotImplementedError()
 
     def predict(self, sequence: str) -> List[dict]:
-        results: List[dict] = list()
+        all_results: List[dict] = []
+        all_errors: List[ErrorType] = []
 
         for allele in self.alleles:
             output, errors = self.run_prediction_process(allele, sequence)
 
             if errors:
-                self.errors.append({'allele': allele, 'errors': errors})
+                all_errors.append({'allele': allele, 'errors': errors})
                 continue
 
             _, rows = output.split('\n', 1)
 
             results_list = self.parse_results_table(rows)
 
-            results.extend(results_list)
+            all_results.extend(results_list)
 
-        return results
+        return all_results
 
     def parse_results_table(self, results_table: str) -> List[dict]:
         template = self.get_table_template()
