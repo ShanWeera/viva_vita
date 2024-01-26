@@ -1,12 +1,12 @@
 from .constants import PredictionMethods, MhcISupertypes
-from .wrappers import MhcINetMhcPan, MhcINetMhcPanEL, MhcIPickpocket, MhcFlurry
+from viva_vdm.core.iedb.mhci import wrappers
 
 
-class MhcIPredictionFactory(object):
+class MhcIPredictionFactory:
     def __new__(
         cls,
         *,
-        supertype: MhcISupertypes,
+        alleles: MhcISupertypes,
         method: PredictionMethods = PredictionMethods.NETMHCPAN,
         length: int = 9,
         cutoff: float = 1.00,
@@ -36,12 +36,22 @@ class MhcIPredictionFactory(object):
         del kwargs['cls']
 
         if method == PredictionMethods.NETMHCPAN:
-            return MhcINetMhcPan(**kwargs)
+            return wrappers.MhcINetMhcPan(**kwargs)
         elif method == PredictionMethods.NETMHCPAN_EL:
-            return MhcINetMhcPanEL(**kwargs)
+            return wrappers.MhcINetMhcPanEL(**kwargs)
         elif method == PredictionMethods.PICKPOCKET:
-            return MhcIPickpocket(**kwargs)
-        elif method == PredictionMethods.MHCFLURRY:
-            return MhcFlurry(**kwargs)
+            return wrappers.MhcIPickpocket(**kwargs)
+        elif method == PredictionMethods.SMM:
+            return wrappers.MhcISMM(**kwargs)
+        elif method == PredictionMethods.SMMPMBEC:
+            return wrappers.MhcISMMPMBEC(**kwargs)
+        elif method == PredictionMethods.CONSENSUS:
+            return wrappers.MhcIConsensus(**kwargs)
+        elif method == PredictionMethods.NETMHCCONS:
+            return wrappers.MhcINetMhcCons(**kwargs)
+        elif method == PredictionMethods.NETMHCSTABPAN:
+            return wrappers.MhcINetMhcStabPan(**kwargs)
+        elif method == PredictionMethods.ANN:
+            return wrappers.MhcIANN(**kwargs)
 
         raise NotImplementedError(f'The method {method} is not implemented')

@@ -1,4 +1,3 @@
-from enum import Enum
 from dataclasses import dataclass
 from pathlib import Path
 from os.path import join
@@ -39,7 +38,8 @@ def get_alleles(
     return [allele.rstrip() for allele in alleles]
 
 
-class MhcISupertypes(Enum):
+@dataclass
+class MhcISupertypes:
     A1 = get_alleles('A1')
     A2 = get_alleles('A2')
     A3 = get_alleles("A3")
@@ -56,18 +56,12 @@ class MhcISupertypes(Enum):
 
 @dataclass
 class PredictionMethods:
-    # TODO: Only NETMHCPAN is in the top 3 of benchmarks. Others either are not in the top 3, or do not produce results.
-    #   Later implement mhcflurry and give users the option to choose the prediction method
-    #   Also, some of these other methods do not support all the alleles in the supertypes we have defined
-    #  (especially ANN, SMM)
-    #   NETMHCPAN, PICKPOCKET, NETMHCPAN_EL support everything.
-    NETMHCPAN_EL: str = "netmhcpan_el"
-    # ANN: str = "ann"
-    NETMHCPAN: str = "netmhcpan"
-    PICKPOCKET: str = "pickpocket"
-    # SMM: str = "smm"
-    # SMMPMBEC: str = "smmpmbec"
-    # CONSENSUS: str = "consensus"
-    # NETMHCCONS: str = "netmhccons"
-    # NETMHCSTABPAN: str = "netmhcstabpan"
-    MHCFLURRY: str = 'mhcflurry'
+    NETMHCPAN_EL: str = "netmhcpan_el"  # ✅
+    ANN: str = "ann"  # ✅
+    NETMHCPAN: str = "netmhcpan"  # ✅
+    PICKPOCKET: str = "pickpocket"  # ✅
+    SMM: str = "smm"  # ✅
+    SMMPMBEC: str = "smmpmbec"  # ✅
+    CONSENSUS: str = "consensus"  # ✅
+    NETMHCCONS: str = "netmhccons"  # ✅
+    NETMHCSTABPAN: str = "netmhcstabpan"  # ✅

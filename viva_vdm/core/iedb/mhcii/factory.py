@@ -1,12 +1,12 @@
 from viva_vdm.core.iedb.mhcii.constants import PredictionMethods, MhcIISupertypes
-from viva_vdm.core.iedb.mhcii.wrappers import MhcIINetMhcPan
+from viva_vdm.core.iedb.mhcii import wrappers
 
 
-class MhcIIPredictionFactory(object):
+class MhcIIPredictionFactory:
     def __new__(
         cls,
         *,
-        supertype: MhcIISupertypes,
+        alleles: MhcIISupertypes,
         method: PredictionMethods = PredictionMethods.NETMHCIIPAN,
         length: int = 12,
         cutoff: float = 1.00,
@@ -36,6 +36,24 @@ class MhcIIPredictionFactory(object):
         del kwargs['cls']
 
         if method == PredictionMethods.NETMHCIIPAN:
-            return MhcIINetMhcPan(**kwargs)
+            return wrappers.MhcIINetMhcPan(**kwargs)
+
+        if method == PredictionMethods.CONSENSUS:
+            return wrappers.MhcIIConsensus(**kwargs)
+
+        if method == PredictionMethods.NNALIGN:
+            return wrappers.MhcIINnAlign(**kwargs)
+
+        if method == PredictionMethods.SMMALIGN:
+            return wrappers.MhcIISmmAlign(**kwargs)
+
+        if method == PredictionMethods.COMBLIB:
+            return wrappers.MhcIICombLib(**kwargs)
+
+        if method == PredictionMethods.NETMHCPAN_EL:
+            return wrappers.MhcIINetMhcPanEl(**kwargs)
+
+        if method == PredictionMethods.NETMHCPAN_BA:
+            return wrappers.MhcIINetMhcPanBa(**kwargs)
 
         raise NotImplementedError(f'The method {method} is not implemented')

@@ -1,74 +1,70 @@
-from typing import List
-
-from mhcii_predictor import MhciiPredictor
-from .constants import MhcIISupertypes, PredictionMethods
-from .models import MHCIIEpitope
+from viva_vdm.core.iedb.common.predictor_base import PredictorBase
+from viva_vdm.core.iedb.mhci.utils import run_mhcii_prediction_process
 
 
-class MHCIIPredictorBase(object):
-    def __init__(
-        self,
-        *,
-        supertype: MhcIISupertypes,
-        method: PredictionMethods = PredictionMethods.NETMHCIIPAN,
-        length: int = 9,
-        cutoff: float = 1.00,
-    ):
-        """
-        This constructor is common for all MHCII prediction methods. It is recommended to not use this directly,
-        but through the factory.
-
-        :param supertype: A pre-defined MHC I supertype.
-        :param method: One of the pre-defined MHC I prediction methods (default: NETMHCPAN).
-        :param length: The length of the generated epitopes (default: 9).
-        :param cutoff: The IEDB percentile cutoff (default: 1%).
-
-        :type supertype: MhcISupertypes
-        :type method: PredictionMethods
-        :type length: int
-        :type cutoff: float
-
-        Example:
-            >>> from viva_vdm.core.iedb.mhcii.constants import MhcIISupertypes, PredictionMethods
-            >>> from viva_vdm.core.iedb.mhcii.wrapper import MhcINetMhcPan
-            >>> prediction_supertype = MhcIISupertypes.A1
-            >>> predictor = MhcINetMhcPan(prediction_supertype)
-            >>> results = predictor.predict("MDSNTVSSFQDI")
-        """
-
-        self.version = '20130222'
-        self.supertype = supertype
-        self.length = length
-        self.method = method
-        self.cutoff = cutoff
-
-    def predict(self, sequence: str):
-        ...
+class MHCIIPredictorBase(PredictorBase):
+    def run_prediction_process(self, allele: str, sequence: str) -> tuple[str, str]:
+        return run_mhcii_prediction_process(self.method, allele, self.length, sequence)
 
 
 class MhcIINetMhcPan(MHCIIPredictorBase):
-    def predict(self, sequence: str) -> List[MHCIIEpitope]:
-        """
-        This is the implementation of the prediction method for NetMHCPan.
+    def get_table_template(self):
+        return """
+<group>
+{{ allele }} {{ seq_num }} {{ start | to_int }} {{ end | to_int }} {{ length | to_int }} {{ sequence }} {{ _peptide }} {{ ic50 | to_float }} {{ percentile | to_float}} {{ _percentile | to_float }}
+</group>
+"""  # noqa: E501
 
-        :param sequence: A protein sequences to predict epitopes for.
-        :type sequence: str
 
-        :return: A list of epitopes with IEDB percentile ranking that is equal to, or less than the defined cutoff.
-        """
+class MhcIIConsensus(MHCIIPredictorBase):
+    def get_table_template(self):
+        return """
+<group>
+{{ allele }} {{ ignore }} {{ start }} {{ end }} {{ length | to_int }} {{ sequence }} {{ percentile | to_float }} {{ ignore }} {{ ignore }} {{ ignore }} {{ ignore }} {{ ignore }} {{ ignore }} {{ ignore }} {{ ignore }} {{ ignore }} {{ ignore }} {{ ignore }} {{ ignore }} {{ ignore }} {{ ignore }} {{ ignore }} {{ ignore }} {{ ignore }}
+</group>
+"""  # noqa: E501
 
-        allele_count = len(self.supertype.value)
-        results = list()
 
-        predictions = MhciiPredictor(self.method, self.supertype.value, [self.length] * allele_count).predict(
-            [sequence]
-        )
+class MhcIINnAlign(MHCIIPredictorBase):
+    def get_table_template(self):
+        return """
+<group>
+{{ allele }} {{ seq_num }} {{ start | to_int }} {{ end | to_int }} {{ length | to_int }} {{ sequence }} {{ _peptide }} {{ ic50 | to_float }} {{ percentile | to_float}} {{ _percentile | to_float }}
+</group>
+"""  # noqa: E501
 
-        for allele in predictions:
-            allele_name = allele[1]
 
-            for epitope in allele[2][0]:
-                if epitope[2] <= self.cutoff:
-                    results.append(MHCIIEpitope(sequence=epitope[0], percentile=epitope[2], allele=allele_name))
+class MhcIISmmAlign(MHCIIPredictorBase):
+    def get_table_template(self):
+        return """
+<group>
+{{ allele }} {{ seq_num }} {{ start | to_int }} {{ end | to_int }} {{ length | to_int }} {{ sequence }} {{ _peptide }} {{ ic50 | to_float }} {{ percentile | to_float}} {{ _percentile | to_float }}
+</group>
+"""  # noqa: E501
 
-        return results
+
+class MhcIICombLib(MHCIIPredictorBase):
+    def get_table_template(self):
+        return """
+<group>
+{{ allele }} {{ seq_num }} {{ start | to_int }} {{ end | to_int }} {{ length | to_int }} {{ sequence }} {{ _peptide }} {{ ic50 | to_float }} {{ percentile | to_float}} {{ _percentile | to_float }}
+</group>
+"""  # noqa: E501
+
+
+class MhcIINetMhcPanEl(MHCIIPredictorBase):
+    def get_table_template(self):
+        return """
+<group>
+{{ allele }} {{ seq_num }} {{ start | to_int }} {{ end | to_int }} {{ length | to_int }} {{ sequence }} {{ _peptide }} {{ ic50 | to_float }} {{ percentile | to_float}}
+</group>
+"""  # noqa: E501
+
+
+class MhcIINetMhcPanBa(MHCIIPredictorBase):
+    def get_table_template(self):
+        return """
+<group>
+{{ allele }} {{ seq_num }} {{ start | to_int }} {{ end | to_int }} {{ length | to_int }} {{ sequence }} {{ _peptide }} {{ ic50 | to_float }} {{ percentile | to_float}}
+</group>
+"""  # noqa: E501
