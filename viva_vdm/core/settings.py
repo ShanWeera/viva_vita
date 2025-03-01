@@ -8,8 +8,8 @@ class ResourceConfig(BaseSettings):
     """
 
     mongo_host: str
-    mongo_root_username: str = None
-    mongo_root_password: str = None
+    mongo_root_username: str
+    mongo_root_password: str
 
     mongo_ddm_username: str
     mongo_ddm_password: str
@@ -42,9 +42,6 @@ class AppConfig(BaseSettings):
     prosite_exe_path: str
     prosite_db_path: str
 
-    blast_exe_path: str
-    blastdb_path: str
-
     class Config:
         env_file: str = '.env'
         env_file_encoding = 'utf-8'
@@ -54,6 +51,4 @@ class AppConfig(BaseSettings):
         fields = {
             'prosite_exe_path': {'env': ['PROSITE_INSTALL_PATH']},
             'prosite_db_path': {'env': ['PROSITE_DB_PATH']},
-            'blast_exe_path': {'env': ['BLAST_INSTALL_PATH']},
-            'blastdb_path': {'env': ['BLASTDB']},
         }

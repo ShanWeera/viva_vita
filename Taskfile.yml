@@ -1,0 +1,33 @@
+version: '3'
+
+tasks:
+  default:
+    - task: infra
+    - task: poetry-windows
+    - task: poetry-unix
+    - task: install
+    - task: resources
+
+  infra:
+    cmds:
+      - docker compose up -d
+
+  poetry-windows:
+    platforms: [windows]
+    cmds:
+      - powershell -c "(Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | py - --version 1.6.0"
+
+  poetry-unix:
+    platforms: [linux, darwin]
+    cmds:
+      - curl -sSL https://install.python-poetry.org | python3 - --version 1.6.0
+
+  install:
+    cmds:
+      - poetry config virtualenvs.in-project true --local
+      - poetry install --no-root
+      - poetry run pre-commit install -f --install-hooks
+
+  resources:
+    cmds:
+      - poetry run setup
