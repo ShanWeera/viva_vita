@@ -1,0 +1,54 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/proxy-body-size: 100m
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+  name: vita-frontend
+spec:
+  rules:
+  - host: vita.bezmialem.edu.tr
+    http:
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: vita-frontend-service
+              port:
+                number: 80
+  tls:
+  - hosts:
+    - vita.bezmialem.edu.tr
+    secretName: bvu-tls-cert
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vita-frontend-service
+spec:
+  selector:
+    app: vita-frontend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vita-frontend-deployment
+spec:
+  selector:
+    matchLabels:
+      app: vita-frontend
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: vita-frontend
+    spec:
+      containers:
+        - name: vita-frontend
+          image: bilsab/vita-frontend:v1.0.0

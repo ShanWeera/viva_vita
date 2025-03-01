@@ -42,22 +42,22 @@ class LoggerMessages(Enum):
 
     PROSITE_STARTING = 'Prosite analysis is starting.'
     PROSITE_RUNNING = 'Prosite analysis is running.'
-    PROSITE_ERROR = 'Prosite analysis failed.'
+    PROSITE_ERROR = 'Prosite analysis failed: {error}'
     PROSITE_COMPLETED = 'Prosite analysis completed.'
 
     BLAST_STARTING = 'Blast analysis is starting.'
     BLAST_RUNNING = 'Blast analysis is running.'
-    BLAST_ERROR = 'Blast analysis failed.'
+    BLAST_ERROR = 'Blast analysis failed: {error}'
     BLAST_COMPLETED = 'Blast analysis completed.'
 
     MHCI_STARTING = 'MHCI prediction is starting.'
     MHCI_RUNNING = 'MHCI prediction is running.'
-    MHCI_ERROR = 'MHCI prediction failed.'
+    MHCI_ERROR = 'MHCI prediction failed: {error}'
     MHCI_COMPLETED = 'MHCI prediction completed.'
 
     MHCII_STARTING = 'MHCII prediction is starting.'
     MHCII_RUNNING = 'MHCII prediction is running.'
-    MHCII_ERROR = 'MHCII prediction failed.'
+    MHCII_ERROR = 'MHCII prediction failed: {error}'
     MHCII_COMPLETED = 'MHCII prediction completed.'
 
     JOB_COMPLETED = 'Job is complete'

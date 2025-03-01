@@ -119,9 +119,9 @@ class VitaWorkflow(object):
         self._convey_job_start()
 
         for hcs in self.job_instance.hcs:
-            # self._run_prosite_for_hcs(hcs)
-            # self._run_mhci_for_hcs(hcs, self.job_instance.mhci_prediction_method)
-            # self._run_mhcii_for_hcs(hcs, self.job_instance.mhcii_prediction_method)
+            self._run_prosite_for_hcs(hcs)
+            self._run_mhci_for_hcs(hcs, self.job_instance.mhci_prediction_method)
+            self._run_mhcii_for_hcs(hcs, self.job_instance.mhcii_prediction_method)
             self._run_blast_for_hcs(hcs, self.job_instance.taxonomy_id)
 
         self._convey_job_end()

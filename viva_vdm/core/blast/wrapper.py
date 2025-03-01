@@ -1,7 +1,6 @@
-import asyncio
 import json
 import time
-from typing import List, Optional, Literal
+from typing import Optional, Literal
 
 import requests
 
@@ -39,12 +38,17 @@ class BlastCliWrapper(object):
 
         req.raise_for_status()
 
-        return req.content.decode('utf-8').strip('"')
+        job_id = req.content.decode('utf-8').strip('"')
+        print(f'Blast job id: {job_id} created')
+
+        return job_id
 
     def _get_blast_results(self, job_id: str) -> BlastResults:
         complete = False
 
         while not complete:
+            print(f'Checking results for blast job id: {job_id}')
+
             req = requests.get(url=f'{self.bvu_blast_status_url}{job_id}', verify=False)
             req.raise_for_status()
 

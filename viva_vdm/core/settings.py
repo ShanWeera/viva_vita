@@ -8,8 +8,8 @@ class ResourceConfig(BaseSettings):
     """
 
     mongo_host: str
-    mongo_root_username: str
-    mongo_root_password: str
+    mongo_root_username: str = None
+    mongo_root_password: str = None
 
     mongo_ddm_username: str
     mongo_ddm_password: str

@@ -1,0 +1,138 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/proxy-body-size: 100m
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+  name: vita-backend
+spec:
+  rules:
+  - host: vita-backend.bezmialem.edu.tr
+    http:
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: vita-backend-service
+              port:
+                number: 80
+  tls:
+  - hosts:
+    - vita-backend.bezmialem.edu.tr
+    secretName: bvu-tls-cert
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vita-envars
+data:
+  MONGO_REPLICASET_NAME: "rs0"
+  ENVIRONMENT_STATE: "prod"
+  MONGO_VITA_HOST: "mongodb-headless.vita.svc.cluster.local"
+  MONGO_VITA_PORT: "27017"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vita-backend-service
+spec:
+  selector:
+    app: viva-vita-backend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: viva-vita-backend-deployment
+spec:
+  selector:
+    matchLabels:
+      app: viva-vita-backend
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: viva-vita-backend
+    spec:
+      containers:
+        - name: viva-vita-backend
+          image: bilsab/viva-vita:v1.0.0
+          envFrom:
+            - secretRef:
+                name: mongodb-db-credentials
+            - configMapRef:
+                name: vita-envars
+          env:
+            - name: RABBITMQ_SERVICE_HOST
+              value: rabbitmq.vita.svc.cluster.local
+            - name: RABBITMQ_USERNAME
+              value: user
+            - name: RABBITMQ_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: rabbitmq-secret
+                  key: rabbitmq-password
+            - name: MONGO_DDM_USERNAME
+              value: vita
+            - name: MONGO_DDM_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb-secret
+                  key: mongodb-passwords
+            - name: MONGO_DDM_DATABASE
+              value: vita
+            - name: MONGO_DDM_HOST
+              value: mongodb-headless.vita.svc.cluster.local
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/bash", "-c"]
+          args:
+            - >-
+              poetry run uvicorn wsgi:app --host 0.0.0.0 --port 80
+      imagePullSecrets:
+        - name: regcred
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: viva-vita-workers-deployment
+spec:
+  selector:
+    matchLabels:
+      app: viva-vita-backend-workers
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: viva-vita-backend-workers
+    spec:
+      containers:
+        - name: viva-vita-worker-default
+          image: bilsab/viva-vita:v1.0.0
+          envFrom:
+            - secretRef:
+                name: mongodb-db-credentials
+            - configMapRef:
+                name: vita-envars
+          env:
+            - name: RABBITMQ_BROKER_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: rabbitmq-credentials
+                  key: rabbitmq-username
+            - name: RABBITMQ_BROKER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: rabbitmq-credentials
+                  key: rabbitmq-password
+          imagePullPolicy: IfNotPresent
+          command: [ "/bin/bash", "-c" ]
+          args:
+            - >-
+              poetry run celery -A viva_vdm.core.celery_app worker --loglevel=debug
+      imagePullSecrets:
+        - name: regcred

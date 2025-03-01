@@ -25,11 +25,13 @@ def handle_feedback(context: str):
                     msg=LoggerMessageMap.completed[context],
                 )
             except Exception as ex:
+                print(f'Unexpected exception occurred: {ex}')
+
                 JobDBModel.objects.update_log(
                     instance=self.job_instance,
                     context=context,
                     flag=LoggerFlags.error,
-                    msg=LoggerMessageMap.error[context],
+                    msg=LoggerMessageMap.error[context].format(error=str(ex)),
                 )
                 JobDBModel.objects.update_status(instance=self.job_instance, status=JobStatuses.error)
 

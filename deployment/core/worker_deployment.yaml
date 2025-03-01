@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: viva-vita-worker-deployment
+spec:
+  selector:
+    matchLabels:
+      app: viva-vita-worker
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: viva-vita-worker
+    spec:
+      containers:
+        - name: viva-vita-worker
+          image: vivabvu.azurecr.io/viva-vita:v2.0.5
+          env:
+            - name: RABBITMQ_SERVICE_HOST
+              value: rabbitmq.vita.svc.cluster.local
+            - name: RABBITMQ_USERNAME
+              value: user
+            - name: RABBITMQ_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: rabbitmq-secret
+                  key: rabbitmq-password
+            - name: MONGO_DDM_USERNAME
+              value: vita
+            - name: MONGO_DDM_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb-secret
+                  key: mongodb-passwords
+            - name: MONGO_DDM_DATABASE
+              value: vita
+            - name: MONGO_DDM_HOST
+              value: mongodb-headless.vita.svc.cluster.local
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/bash", "-c"]
+          args:
+            - >-
+              poetry run celery -A viva_vdm.core.celery_app worker --loglevel=DEBUG
+      imagePullSecrets:
+        - name: azurecreds
